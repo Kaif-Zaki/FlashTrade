@@ -188,11 +188,4 @@ Core user flow is implemented:
 - submit contact messages from authenticated user email
 - submit product reviews from authenticated user profile
 
----
 
-<div align="center">
-
-### 💡 Tip
-If you want the default GitHub convention, rename `Readme.md` to `README.md`.
-
-</div>
