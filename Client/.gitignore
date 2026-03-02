@@ -1,0 +1,98 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# -----------------------------
+# OS / Editor
+# -----------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -----------------------------
+# Logs
+# -----------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# -----------------------------
+# Node dependencies
+# -----------------------------
+node_modules/
+Client/node_modules/
+Server/node_modules/
+
+# -----------------------------
+# Build / cache outputs
+# -----------------------------
+dist/
+build/
+coverage/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+Client/dist/
+Client/.vite/
+Server/dist/
+
+# -----------------------------
+# Environment / secrets
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+Client/.env
+Client/.env.*
+!Client/.env.example
+
+Server/.env
+Server/.env.*
+!Server/.env.example
+
+# -----------------------------
+# Runtime / temporary files
+# -----------------------------
+tmp/
+temp/
+*.pid
+*.seed
+*.pid.lock
+
+# -----------------------------
+# Uploads / local data (if used)
+# -----------------------------
+uploads/
+
+# -----------------------------
+# Misc
+# -----------------------------
+*.local

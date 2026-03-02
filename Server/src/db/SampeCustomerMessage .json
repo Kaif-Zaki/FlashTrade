@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Zaki",
+    "email": "zaki@example.com",
+    "subject": "Inquiry about Blue T-Shirt",
+    "message": "Hi, is the Blue T-Shirt available in size M?",
+    "createdAt": "2026-02-26T06:00:00.000Z"
+  },
+  {
+    "name": "Nisha Perera",
+    "email": "nisha@example.com",
+    "subject": "Order delay",
+    "message": "Hello, I placed an order 3 days ago, but it hasn’t arrived yet.",
+    "createdAt": "2026-02-25T14:30:00.000Z"
+  },
+  {
+    "name": "Kasun Fernando",
+    "email": "kasun@example.com",
+    "subject": "Product color options",
+    "message": "Can I get the Red Hoodie in size XL?",
+    "createdAt": "2026-02-24T10:15:00.000Z"
+  },
+  {
+    "name": "Anjali Silva",
+    "email": "anjali@example.com",
+    "subject": "Payment issue",
+    "message": "I tried to pay with my card but it was declined. Please advise.",
+    "createdAt": "2026-02-23T18:45:00.000Z"
+  },
+  {
+    "name": "Ramesh Jayawardena",
+    "email": "ramesh@example.com",
+    "subject": "Product suggestion",
+    "message": "Can you add more sizes for the Sneakers product?",
+    "createdAt": "2026-02-22T09:00:00.000Z"
+  }
+]

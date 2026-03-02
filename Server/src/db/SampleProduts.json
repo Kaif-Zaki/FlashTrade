@@ -1,0 +1,109 @@
+[
+  {
+    "name": "Blue Cotton T-Shirt",
+    "description": "Soft cotton t-shirt for daily wear",
+    "price": 22,
+    "stock": 25,
+    "sizes": ["S", "M", "L", "XL"],
+    "colors": ["Blue", "White", "Black"],
+    "images": [
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000001" }
+  },
+
+  {
+    "name": "Red Hoodie",
+    "description": "Warm hoodie perfect for cold weather",
+    "price": 38,
+    "stock": 18,
+    "sizes": ["M", "L", "XL"],
+    "colors": ["Red", "Black"],
+    "images": [
+      "https://images.unsplash.com/photo-1618354691373-9d4c6c04d6b4?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1602810317536-5d5cfd28c50c?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000001" }
+  },
+
+  {
+    "name": "Wireless Bluetooth Speaker",
+    "description": "Portable speaker with deep bass",
+    "price": 55,
+    "stock": 14,
+    "colors": ["Black", "Grey"],
+    "images": [
+      "https://images.unsplash.com/photo-1589003077984-894e133dabab?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000002" }
+  },
+
+  {
+    "name": "Wireless Mouse",
+    "description": "Ergonomic wireless mouse for work and gaming",
+    "price": 28,
+    "stock": 30,
+    "colors": ["Black", "Grey"],
+    "images": [
+      "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1616627981821-1d9f0a97c3d6?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000002" }
+  },
+
+  {
+    "name": "Leather Wallet",
+    "description": "Premium leather wallet with multiple slots",
+    "price": 45,
+    "stock": 20,
+    "colors": ["Brown", "Black"],
+    "images": [
+      "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1601592997069-6d2d9f4b7b8b?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000003" }
+  },
+
+  {
+    "name": "Classic Sneakers",
+    "description": "Comfortable everyday sneakers",
+    "price": 65,
+    "stock": 22,
+    "sizes": ["38", "39", "40", "41", "42"],
+    "colors": ["White", "Black"],
+    "images": [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1606813909227-9f3a4b9c7c6c?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000004" }
+  },
+
+  {
+    "name": "Running Shoes",
+    "description": "Lightweight running shoes for daily training",
+    "price": 72,
+    "stock": 16,
+    "sizes": ["39", "40", "41", "42", "43"],
+    "colors": ["Grey", "Blue"],
+    "images": [
+      "https://images.unsplash.com/photo-1600180758890-6b94519a8ba6?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1606813909355-d2e6c76f2e0c?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000004" }
+  },
+
+  {
+    "name": "Smart Watch",
+    "description": "Fitness tracking smart watch",
+    "price": 90,
+    "stock": 12,
+    "colors": ["Black", "Silver"],
+    "images": [
+      "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1558126319-c9feecbf57ee?auto=format&fit=crop&w=1200&q=80"
+    ],
+    "category": { "$oid": "65f000000000000000000002" }
+  }
+]
