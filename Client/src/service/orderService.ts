@@ -6,12 +6,12 @@ export const placeOrderRequest = async (payload: PlaceOrderPayload): Promise<Ord
   return response.data;
 };
 
-export const getUserOrdersRequest = async (userId: string): Promise<Order[]> => {
-  const response = await apiClient.get<Order[]>(`/orders/${userId}`);
+export const getUserOrdersRequest = async (): Promise<Order[]> => {
+  const response = await apiClient.get<Order[]>("/orders/my");
   return response.data;
 };
 
 export const getOrderByIdRequest = async (orderId: string): Promise<Order> => {
-  const response = await apiClient.get<Order>(`/orders/order/${orderId}`);
+  const response = await apiClient.get<Order>(`/orders/my/${orderId}`);
   return response.data;
 };

@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AxiosError } from "axios";
-import { getProfileRequest } from "../service/authService";
 import {
   addToCartRequest,
   getCartRequest,
@@ -18,14 +17,13 @@ const ShoppingCart = () => {
   const [cart, setCart] = useState<CartResponse>({ items: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [userId, setUserId] = useState("");
   const [busyItemKey, setBusyItemKey] = useState<string>("");
 
   const getItemKey = (productId: string, size?: string, color?: string) =>
     `${productId}__${size || ""}__${color || ""}`;
 
-  const loadCart = async (currentUserId: string) => {
-    const data = await getCartRequest(currentUserId);
+  const loadCart = async () => {
+    const data = await getCartRequest();
     setCart(data);
   };
 
@@ -33,12 +31,9 @@ const ShoppingCart = () => {
     const init = async () => {
       setCart({ items: [] });
       setError("");
-      setUserId("");
       setIsLoading(true);
       try {
-        const profile = await getProfileRequest();
-        setUserId(profile._id);
-        await loadCart(profile._id);
+        await loadCart();
       } catch (err) {
         if (err instanceof AxiosError) {
           setError(err.response?.data?.message || "Failed to load cart");
@@ -61,31 +56,31 @@ const ShoppingCart = () => {
   }, []);
 
   const updateQty = async (productId: string, currentQty: number, nextQty: number, size?: string, color?: string) => {
-    if (!userId || nextQty < 0) return;
+    if (nextQty < 0) return;
     const itemKey = getItemKey(productId, size, color);
     setBusyItemKey(itemKey);
     setError("");
 
     try {
       if (nextQty === 0) {
-        await removeFromCartRequest(userId, productId, size, color);
+        await removeFromCartRequest(productId, size, color);
       } else if (nextQty > currentQty) {
-        await addToCartRequest(userId, {
+        await addToCartRequest({
           product: productId,
           qty: nextQty - currentQty,
           size,
           color,
         });
       } else {
-        await removeFromCartRequest(userId, productId, size, color);
-        await addToCartRequest(userId, {
+        await removeFromCartRequest(productId, size, color);
+        await addToCartRequest({
           product: productId,
           qty: nextQty,
           size,
           color,
         });
       }
-      await loadCart(userId);
+      await loadCart();
       window.dispatchEvent(new Event("cart-updated"));
     } catch (err) {
       if (err instanceof AxiosError) {
@@ -99,14 +94,13 @@ const ShoppingCart = () => {
   };
 
   const removeItem = async (productId: string, size?: string, color?: string) => {
-    if (!userId) return;
     const itemKey = getItemKey(productId, size, color);
     setBusyItemKey(itemKey);
     setError("");
 
     try {
-      await removeFromCartRequest(userId, productId, size, color);
-      await loadCart(userId);
+      await removeFromCartRequest(productId, size, color);
+      await loadCart();
       window.dispatchEvent(new Event("cart-updated"));
     } catch (err) {
       if (err instanceof AxiosError) {

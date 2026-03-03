@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AxiosError } from "axios";
 import { useAuth } from "../context/useAuth.ts";
 import { loginRequest, signupRequest } from "../service/authService.ts";
+import { USER_ROLES, type UserRole } from "../types/Auth.ts";
 
 export const RegisterPage = () => {
   const { login } = useAuth();
@@ -14,6 +15,7 @@ export const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<UserRole>(USER_ROLES.CUSTOMER);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -30,10 +32,10 @@ export const RegisterPage = () => {
     }
 
     try {
-      await signupRequest({ name, email, password, address });
+      await signupRequest({ name, email, password, address, role });
       const loginRes = await loginRequest({ email, password });
-      login(loginRes.accessToken);
-      navigate("/UserDashboard");
+      login(loginRes.accessToken, loginRes.role);
+      navigate("/dashboard");
     } catch (err) {
       if (err instanceof AxiosError) {
         setError(err.response?.data?.message || "Signup failed");
@@ -115,6 +117,21 @@ export const RegisterPage = () => {
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-200"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="role" className="mb-1.5 block text-sm font-medium text-slate-800">
+                  Account type
+                </label>
+                <select
+                  id="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value as UserRole)}
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 outline-none transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-200"
+                >
+                  <option value={USER_ROLES.CUSTOMER}>Customer</option>
+                  <option value={USER_ROLES.SELLER}>Seller</option>
+                </select>
               </div>
 
               <div>

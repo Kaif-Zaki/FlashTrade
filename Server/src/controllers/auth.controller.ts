@@ -3,14 +3,15 @@ import { UserModel } from "../models/User";
 import bcrypt from "bcrypt";
 import { ApiError } from "../errors/ApiError";
 import crypto from "crypto";
+import { USER_ROLES, type UserRole } from "../constants/roles";
 
 //implement jwt
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { sendEmail } from "../utils/mailer";
 
 //jwt token access
-const createAccessToken = (userId: string) => {
-  return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET!, {
+const createAccessToken = (userId: string, role: UserRole) => {
+  return jwt.sign({ userId, role }, process.env.ACCESS_TOKEN_SECRET!, {
     expiresIn: "15m",
   });
 };
@@ -28,7 +29,16 @@ export const signUp = async (
   next: NextFunction
 ) => {
   try {
-    const { email, name, address ,password } = req.body;
+    const { email, name, address, password, role } = req.body as {
+      email: string;
+      name: string;
+      address?: string;
+      password: string;
+      role?: UserRole;
+    };
+    const normalizedRole =
+      role === USER_ROLES.SELLER ? USER_ROLES.SELLER : USER_ROLES.CUSTOMER;
+
     const SALT = 10;
     const hashedPassword = await bcrypt.hash(password, SALT);
     const user = new UserModel({
@@ -36,6 +46,7 @@ export const signUp = async (
       name,
       address,
       password: hashedPassword,
+      role: normalizedRole,
     });
     await user.save();
 
@@ -47,6 +58,7 @@ export const signUp = async (
       name: user.name,
       email: user.email,
       address: user.address,
+      role: user.role,
     };
     res.status(201).json(userWithoutPassword);
   } catch (error: any) {
@@ -89,7 +101,7 @@ export const login = async (
 
     //jwt 2 types token addition
 
-    const accessToken = createAccessToken(user._id.toString());
+    const accessToken = createAccessToken(user._id.toString(), user.role);
 
     const refreshToken = createRefreshToken(user._id.toString());
 
@@ -111,6 +123,7 @@ export const login = async (
       name: user.name,
       email: user.email,
       address: user.address,
+      role: user.role,
       accessToken,
     };
 
@@ -160,7 +173,7 @@ export const refreshToken = async (
           return next(new ApiError(401, "User not found"));
         }
 
-        const newAccessToken = createAccessToken(user._id.toString());
+        const newAccessToken = createAccessToken(user._id.toString(), user.role);
 
         res.status(200).json({
           accessToken: newAccessToken,

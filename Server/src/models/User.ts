@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
+import { USER_ROLES, type UserRole } from "../constants/roles";
 
 type User = {
     name : string
     email : string
     address?: string
     password : string
+    role: UserRole
     resetToken? : string | null
     resetTokenExpiry? : Date | null
 }
@@ -34,6 +36,12 @@ const userSchema = new mongoose.Schema<User>({
         type: String,
         required: [true, "Password is required"],
         minlength: [6, "Password must be at least 6 characters long"]
+    },
+    role: {
+        type: String,
+        enum: Object.values(USER_ROLES),
+        default: USER_ROLES.CUSTOMER,
+        index: true,
     },
     resetToken: {
         type: String,

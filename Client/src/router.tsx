@@ -16,6 +16,7 @@ import AboutUs from './pages/AboutUs'
 import Faqs from './pages/Faqs'
 import ShippingPolicy from './pages/ShippingPolicy'
 import OrderHistory from './pages/OrderHistory'
+import { USER_ROLES } from './types/Auth'
 
 export const router = createBrowserRouter([
   {
@@ -34,13 +35,17 @@ export const router = createBrowserRouter([
       {
         element:<AdminRoutes/>,
         children:[
-          {path:"UserDashboard",element:<WelcomePage/>},
+          {path:"dashboard",element:<WelcomePage/>},
+          {path:"private-details",element:<PrivateDetailsPage/>},
+        ]
+      },
+      {
+        element:<AdminRoutes allowedRoles={[USER_ROLES.CUSTOMER]}/>,
+        children:[
           {path:"cart",element:<CartPage/>},
           {path:"checkout/customer-details",element:<CheckoutCustomerDetail/>},
           {path:"checkout/payment",element:<CheckoutPayment/>},
-          {path:"private-details",element:<PrivateDetailsPage/>},
           {path:"orders",element:<OrderHistory/>},
-          
         ]
       }
     ]

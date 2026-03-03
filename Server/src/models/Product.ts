@@ -9,6 +9,7 @@ type Product  = {
   sizes?: string[];
   colors?: string[];
   category: mongoose.Types.ObjectId;
+  seller: mongoose.Types.ObjectId;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -57,6 +58,12 @@ type Product  = {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
     required: [true, "Book category is required"],
+  },
+  seller: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: [true, "Product seller is required"],
+    index: true,
   },
 
 

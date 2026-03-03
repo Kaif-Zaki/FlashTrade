@@ -13,12 +13,19 @@ import {
 } from "../controllers/auth.controller";
 
 import { authenticateToken } from "../middlewares/authenticateToken";
+import { authorizeRoles } from "../middlewares/authorizeRoles";
+import { USER_ROLES } from "../constants/roles";
 
 const authRouter = Router();
 
 authRouter.post("/signup", signUp);
 authRouter.post("/login", login);
-authRouter.get("/users", authenticateToken, getAllUsers);
+authRouter.get(
+  "/users",
+  authenticateToken,
+  authorizeRoles(USER_ROLES.ADMIN),
+  getAllUsers
+);
 authRouter.post("/refresh-token", refreshToken);
 authRouter.put("/change-password", authenticateToken, changePassword);
 authRouter.put("/update-profile", authenticateToken, updateProfile);

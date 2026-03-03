@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../errors/ApiError";
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import type { UserRole } from "../constants/roles";
 
 declare global {
   namespace Express {
     interface Request {
       userId?: string;
+      userRole?: UserRole;
     }
   }
 }
@@ -34,6 +36,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     }
 
     req.userId = (decoded as { userId: string }).userId;
+    req.userRole = (decoded as { role?: UserRole }).role;
     next();
   });
 };

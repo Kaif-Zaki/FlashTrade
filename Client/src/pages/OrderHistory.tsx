@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
-import { getProfileRequest } from "../service/authService";
 import { getUserOrdersRequest } from "../service/orderService";
 import type { Order, OrderItem } from "../types/Order";
 import type { Product } from "../types/Product";
@@ -21,8 +20,7 @@ const OrderHistory = () => {
       setError("");
       setIsLoading(true);
       try {
-        const profile = await getProfileRequest();
-        const result = await getUserOrdersRequest(profile._id);
+        const result = await getUserOrdersRequest();
         setOrders(result);
       } catch (err) {
         if (err instanceof AxiosError) {

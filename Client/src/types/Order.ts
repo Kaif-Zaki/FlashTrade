@@ -3,7 +3,6 @@ import type { Product } from "./Product";
 export type PaymentMethod = "cash" | "online";
 
 export interface PlaceOrderPayload {
-  userId: string;
   shippingAddress: string;
   paymentMethod: PaymentMethod;
 }

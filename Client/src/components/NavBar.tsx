@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, ShoppingCart, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth.ts";
-import { getProfileRequest } from "../service/authService.ts";
 import { getCartRequest } from "../service/cartService.ts";
 import { getProductsRequest } from "../service/productService.ts";
 import { getCategoriesRequest } from "../service/categoryService.ts";
@@ -11,7 +10,7 @@ import type { Category } from "../types/Category.ts";
 import vexoLogo from "../assets/VexoLogo.png";
 
 export default function Navbar() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, userRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -66,8 +65,7 @@ export default function Navbar() {
       }
 
       try {
-        const profile = await getProfileRequest();
-        const cart = await getCartRequest(profile._id);
+        const cart = await getCartRequest();
         const totalQty = cart.items.reduce((sum, item) => sum + item.qty, 0);
         setCartCount(totalQty);
       } catch {
@@ -180,21 +178,23 @@ export default function Navbar() {
         <div className="flex items-center gap-5 self-end sm:gap-6 lg:self-auto">
           {isLoggedIn ? (
             <>
-              <Link
-                to="/cart"
-                className="flex items-center font-medium hover:text-blue-600"
-                aria-label="Cart"
-                title="Cart"
-              >
-                <span className="relative inline-flex">
-                  <ShoppingCart className="h-6 w-6" />
-                  {cartCount > 0 && (
-                    <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-black px-1 text-[10px] font-bold text-white">
-                      {cartCount}
-                    </span>
-                  )}
-                </span>
-              </Link>
+              {userRole === "customer" && (
+                <Link
+                  to="/cart"
+                  className="flex items-center font-medium hover:text-blue-600"
+                  aria-label="Cart"
+                  title="Cart"
+                >
+                  <span className="relative inline-flex">
+                    <ShoppingCart className="h-6 w-6" />
+                    {cartCount > 0 && (
+                      <span className="absolute -right-2 -top-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-black px-1 text-[10px] font-bold text-white">
+                        {cartCount}
+                      </span>
+                    )}
+                  </span>
+                </Link>
+              )}
               <Link
                 to="/private-details"
                 aria-label="Private Details"
@@ -241,7 +241,7 @@ export default function Navbar() {
           <Link to="/contact">
             <NavItem text="Contact Us" active={location.pathname === "/contact"} />
           </Link>
-          {isLoggedIn && (
+          {isLoggedIn && userRole === "customer" && (
             <Link to="/orders">
               <NavItem text="Order History" active={location.pathname === "/orders"} />
             </Link>

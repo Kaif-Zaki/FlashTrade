@@ -21,8 +21,8 @@ export const LoginPage = () => {
 
     try {
       const response = await loginRequest({ email, password });
-      login(response.accessToken);
-      navigate("/UserDashboard");
+      login(response.accessToken, response.role);
+      navigate("/dashboard");
     } catch (err) {
       if (err instanceof AxiosError) {
         setError(err.response?.data?.message || "Login failed");

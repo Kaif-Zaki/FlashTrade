@@ -16,7 +16,6 @@ type Tab = "customer" | "payment";
 const CheckoutPayment = () => {
   const navigate = useNavigate();
   const [activeTab] = useState<Tab>("payment");
-  const [userId, setUserId] = useState("");
   const [cart, setCart] = useState<CartResponse>({ items: [] });
   const [draft, setDraft] = useState<CheckoutDraft | null>(null);
   const [form, setForm] = useState({
@@ -49,9 +48,8 @@ const CheckoutPayment = () => {
       setDraft(parsedDraft);
 
       try {
-        const profile = await getProfileRequest();
-        setUserId(profile._id);
-        const cartData = await getCartRequest(profile._id);
+        await getProfileRequest();
+        const cartData = await getCartRequest();
         setCart(cartData);
 
         if (cartData.items.length === 0) {
@@ -90,7 +88,7 @@ const CheckoutPayment = () => {
   const total = subtotal - discount + (cart.items.length > 0 ? DELIVERY_FEE : 0);
 
   const handlePay = async () => {
-    if (!draft || !userId) {
+    if (!draft) {
       setError("Checkout details are missing");
       return;
     }
@@ -119,7 +117,6 @@ const CheckoutPayment = () => {
     try {
       const shippingAddress = [draft.address, draft.postalCode].filter(Boolean).join(", ");
       const order = await placeOrderRequest({
-        userId,
         shippingAddress,
         paymentMethod: draft.paymentMethod,
       });

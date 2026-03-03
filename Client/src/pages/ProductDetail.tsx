@@ -104,8 +104,7 @@ const ProductDetail = () => {
     setIsAdding(true);
 
     try {
-      const profile = await getProfileRequest();
-      await addToCartRequest(profile._id, {
+      await addToCartRequest({
         product: product._id,
         qty,
         size: selectedSize || undefined,

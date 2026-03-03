@@ -1,10 +1,12 @@
 import { apiClient } from "./apiClient";
+import type { UserRole } from "../types/Auth";
 
 export interface AuthUser {
   _id: string;
   name: string;
   email: string;
   address?: string;
+  role: UserRole;
 }
 
 interface LoginResponse extends AuthUser {
@@ -16,6 +18,7 @@ interface SignupPayload {
   email: string;
   password: string;
   address?: string;
+  role?: UserRole;
 }
 
 interface LoginPayload {

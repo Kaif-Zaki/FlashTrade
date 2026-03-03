@@ -34,7 +34,7 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/UserDashboard" className="hover:text-white">
+              <Link to="/dashboard" className="hover:text-white">
                 Dashboard
               </Link>
             </li>

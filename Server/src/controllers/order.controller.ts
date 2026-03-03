@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Order from "../models/Order";
 import Cart from "../models/Cart";
 import { ProductModel } from "../models/Product";
+import { USER_ROLES } from "../constants/roles";
 
 type HttpError = Error & { status?: number };
 
@@ -142,6 +143,74 @@ export const getOrderById = async (req: Request, res: Response) => {
     }
 
     res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err });
+  }
+};
+
+// ADMIN: GET ALL ORDERS
+export const getAllOrders = async (_req: Request, res: Response) => {
+  try {
+    const orders = await Order.find().populate("items.product user");
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err });
+  }
+};
+
+// SELLER: GET ORDERS CONTAINING SELLER PRODUCTS
+export const getSellerOrders = async (req: Request, res: Response) => {
+  try {
+    const authUserId = req.userId;
+    if (!authUserId) return res.status(401).json({ message: "Unauthorized" });
+
+    const orders = await Order.find().populate({
+      path: "items.product",
+      populate: { path: "seller", select: "_id" },
+    });
+
+    const sellerOrders = orders.filter((order) =>
+      order.items.some((item: any) => item.product?.seller?._id?.toString() === authUserId)
+    );
+
+    res.json(sellerOrders);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err });
+  }
+};
+
+// ADMIN/SELLER: UPDATE ORDER STATUS
+export const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const authUserId = req.userId;
+    const authUserRole = req.userRole;
+    const { orderStatus } = req.body as {
+      orderStatus: "processing" | "shipped" | "delivered";
+    };
+
+    if (!authUserId || !authUserRole) return res.status(401).json({ message: "Unauthorized" });
+    if (!orderStatus) return res.status(400).json({ message: "orderStatus is required" });
+
+    const order = await Order.findById(req.params.orderId).populate({
+      path: "items.product",
+      populate: { path: "seller", select: "_id" },
+    });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    if (authUserRole === USER_ROLES.SELLER) {
+      const ownsAnyProductInOrder = order.items.some(
+        (item: any) => item.product?.seller?._id?.toString() === authUserId
+      );
+      if (!ownsAnyProductInOrder) {
+        return res.status(403).json({ message: "Forbidden for this order" });
+      }
+    }
+
+    order.orderStatus = orderStatus;
+    await order.save();
+
+    const updatedOrder = await Order.findById(order._id).populate("items.product user");
+    res.json(updatedOrder);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
   }

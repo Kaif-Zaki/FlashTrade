@@ -17,7 +17,6 @@ const Checkout = () => {
   const navigate = useNavigate();
   const [activeTab] = useState<Tab>("customer");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
-  const [userId, setUserId] = useState("");
   const [cart, setCart] = useState<CartResponse>({ items: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,7 +46,6 @@ const Checkout = () => {
     const loadData = async () => {
       try {
         const profile = await getProfileRequest();
-        setUserId(profile._id);
 
         if (!sessionStorage.getItem(STORAGE_KEY)) {
           const [firstName, ...rest] = profile.name.trim().split(" ");
@@ -59,7 +57,7 @@ const Checkout = () => {
           }));
         }
 
-        const cartData = await getCartRequest(profile._id);
+        const cartData = await getCartRequest();
         setCart(cartData);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -88,11 +86,6 @@ const Checkout = () => {
 
   const goToPayment = () => {
     const updated: CheckoutDraft = { ...form, paymentMethod };
-
-    if (!userId) {
-      setError("Please login again");
-      return;
-    }
 
     if (!updated.firstName || !updated.mobile || !updated.address) {
       setError("First name, mobile number and address are required");
