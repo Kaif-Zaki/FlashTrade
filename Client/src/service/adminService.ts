@@ -116,7 +116,6 @@ export interface CommissionRule {
   _id: string;
   category: { _id: string; name: string };
   minQty: number;
-  maxQty?: number | null;
   ratePercent: number;
   isActive: boolean;
 }
@@ -129,7 +128,6 @@ export const getCommissionRulesRequest = async () => {
 export const createCommissionRuleRequest = async (payload: {
   category: string;
   minQty: number;
-  maxQty?: number | null;
   ratePercent: number;
   isActive?: boolean;
 }) => {
@@ -141,7 +139,6 @@ export const updateCommissionRuleRequest = async (
   ruleId: string,
   payload: Partial<{
     minQty: number;
-    maxQty: number | null;
     ratePercent: number;
     isActive: boolean;
   }>

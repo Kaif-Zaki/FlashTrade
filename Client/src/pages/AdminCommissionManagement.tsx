@@ -16,7 +16,6 @@ const AdminCommissionManagement = () => {
   const [form, setForm] = useState({
     category: "",
     minQty: "",
-    maxQty: "",
     ratePercent: "",
     isActive: true,
   });
@@ -53,7 +52,6 @@ const AdminCommissionManagement = () => {
     setMessage("");
 
     const minQty = Number(form.minQty);
-    const maxQty = form.maxQty ? Number(form.maxQty) : null;
     const ratePercent = Number(form.ratePercent);
 
     if (!form.category) {
@@ -68,17 +66,11 @@ const AdminCommissionManagement = () => {
       setError("Commission percent must be between 0 and 100");
       return;
     }
-    if (maxQty !== null && (!Number.isFinite(maxQty) || maxQty < minQty)) {
-      setError("Max quantity must be empty or greater than min quantity");
-      return;
-    }
-
     setIsSaving(true);
     try {
       const createdRule = await createCommissionRuleRequest({
         category: form.category,
         minQty,
-        maxQty,
         ratePercent,
         isActive: form.isActive,
       });
@@ -87,7 +79,6 @@ const AdminCommissionManagement = () => {
       setForm({
         category: "",
         minQty: "",
-        maxQty: "",
         ratePercent: "",
         isActive: true,
       });
@@ -136,17 +127,17 @@ const AdminCommissionManagement = () => {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <h1 className="text-2xl font-bold text-slate-900">Commission Management</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Set commission pricing by category and quantity tiers for seller listings.
-        </p>
+      
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
         {message && <p className="mt-4 text-sm text-green-700">{message}</p>}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          <form onSubmit={handleCreateRule} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <form
+            onSubmit={handleCreateRule}
+            className="flex h-fit flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)]"
+          >
             <h2 className="text-lg font-semibold text-slate-900">Add Commission Rule</h2>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
               <select
                 value={form.category}
                 onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
@@ -165,14 +156,6 @@ const AdminCommissionManagement = () => {
                 min={1}
                 value={form.minQty}
                 onChange={(e) => setForm((prev) => ({ ...prev, minQty: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-600"
-              />
-              <input
-                placeholder="Max quantity (optional)"
-                type="number"
-                min={1}
-                value={form.maxQty}
-                onChange={(e) => setForm((prev) => ({ ...prev, maxQty: e.target.value }))}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-600"
               />
               <input
@@ -202,9 +185,9 @@ const AdminCommissionManagement = () => {
             </button>
           </form>
 
-          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+          <section className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:col-span-2 lg:max-h-[calc(100vh-7rem)]">
             <h2 className="text-lg font-semibold text-slate-900">Current Rules</h2>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3 overflow-y-auto pr-1">
               {rules.length === 0 && <p className="text-sm text-slate-600">No rules found.</p>}
               {rules.map((rule) => (
                 <div
@@ -214,7 +197,7 @@ const AdminCommissionManagement = () => {
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{rule.category?.name || "Category"}</p>
                     <p className="text-xs text-slate-600">
-                      Qty {rule.minQty} - {rule.maxQty ?? "and above"} | {rule.ratePercent}% commission
+                      Qty {rule.minQty} and above | {rule.ratePercent}% commission
                     </p>
                     <p
                       className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -228,7 +211,7 @@ const AdminCommissionManagement = () => {
                     <button
                       type="button"
                       onClick={() => toggleRuleStatus(rule)}
-                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto"
                     >
                       {rule.isActive ? "Disable" : "Enable"}
                     </button>
@@ -236,7 +219,7 @@ const AdminCommissionManagement = () => {
                       type="button"
                       onClick={() => handleDeleteRule(rule._id)}
                       disabled={deletingRuleId === rule._id}
-                      className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-70"
+                      className="w-full rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-70 sm:w-auto"
                     >
                       {deletingRuleId === rule._id ? "Deleting..." : "Delete"}
                     </button>

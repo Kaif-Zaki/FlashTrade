@@ -33,15 +33,7 @@ const SellerAnalyticsPage = () => {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-indigo-50 to-emerald-50 p-6 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
-          <div className="flex items-center gap-2">
-            <BarChart3 size={18} className="text-slate-900 dark:text-slate-100" />
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Seller Analytics</h1>
-          </div>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-            Track your sales, commission costs, best sellers, and stock alerts.
-          </p>
-        </div>
+       
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
         {isLoading && <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Loading analytics...</p>}

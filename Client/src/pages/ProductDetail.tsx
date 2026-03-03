@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AxiosError } from "axios";
-import { getProductByIdRequest } from "../service/productService.ts";
+import { getProductByIdRequest, getProductsRequest } from "../service/productService.ts";
 import type { Product } from "../types/Product";
 import { getProfileRequest } from "../service/authService.ts";
 import { addToCartRequest } from "../service/cartService.ts";
@@ -28,6 +28,8 @@ const ProductDetail = () => {
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isRelatedLoading, setIsRelatedLoading] = useState(false);
   const [reviewUser, setReviewUser] = useState<{ name: string; email: string } | null>(null);
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
@@ -104,6 +106,30 @@ const ProductDetail = () => {
 
     loadReviewUser();
   }, []);
+
+  useEffect(() => {
+    const loadRelatedProducts = async () => {
+      if (!product?.category?._id) {
+        setRelatedProducts([]);
+        return;
+      }
+
+      setIsRelatedLoading(true);
+      try {
+        const allProducts = await getProductsRequest();
+        const sameCategoryProducts = allProducts.filter(
+          (item) => item._id !== product._id && item.category?._id === product.category._id
+        );
+        setRelatedProducts(sameCategoryProducts);
+      } catch {
+        setRelatedProducts([]);
+      } finally {
+        setIsRelatedLoading(false);
+      }
+    };
+
+    loadRelatedProducts();
+  }, [product?._id, product?.category?._id]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -195,11 +221,11 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="mx-auto max-w-5xl">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 sm:py-8">
+      <div className="mx-auto max-w-6xl">
         <button
           onClick={() => navigate(-1)}
-          className="mb-8 flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-900 hover:text-white"
+          className="mb-6 flex h-9 w-9 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 transition-colors hover:bg-gray-900 hover:text-white"
         >
           <ArrowLeft size={17} />
         </button>
@@ -208,26 +234,32 @@ const ProductDetail = () => {
         {!isLoading && error && <p className="text-sm text-red-600">{error}</p>}
 
         {!isLoading && !error && product && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[420px_1fr]">
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[420px_minmax(0,1fr)]">
               <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
                 {product.images?.[0] ? (
-                  <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <div className="flex h-[420px] items-center justify-center text-sm text-gray-500">No image</div>
+                  <div className="flex h-[420px] items-center justify-center text-sm text-gray-500">
+                    No image
+                  </div>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h1 className="mb-2 text-2xl font-bold text-gray-900">{product.name}</h1>
+              <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
+                <h1 className="mb-2 text-xl font-bold text-gray-900 sm:text-2xl">{product.name}</h1>
                 {isOutOfStock ? (
                   <p className="mb-4 text-sm font-semibold text-red-600">Out of stock</p>
                 ) : (
                   <p className="mb-4 text-sm text-gray-500">Stock: {product.stock}</p>
                 )}
-                <p className="mb-6 text-2xl font-bold text-gray-900">LKR {displayPrice.toLocaleString()}</p>
+                <p className="mb-5 text-2xl font-bold text-gray-900">LKR {displayPrice.toLocaleString()}</p>
 
-                <div className="mb-5">
+                <div className="mb-4">
                   <p className="mb-2 text-sm font-semibold text-gray-700">Quantity</p>
                   <div className="flex w-fit items-center gap-3 rounded-lg border border-gray-300 px-3 py-2">
                     <button
@@ -249,7 +281,7 @@ const ProductDetail = () => {
                 </div>
 
                 {product.sizes && product.sizes.length > 0 && (
-                  <div className="mb-5">
+                  <div className="mb-4">
                     <p className="mb-2 text-sm font-semibold text-gray-700">Size</p>
                     <div className="flex flex-wrap gap-2">
                       {product.sizes.map((size) => (
@@ -275,7 +307,7 @@ const ProductDetail = () => {
                 )}
 
                 {product.colors && product.colors.length > 0 && (
-                  <div className="mb-5">
+                  <div className="mb-4">
                     <p className="mb-2 text-sm font-semibold text-gray-700">Color</p>
                     <div className="flex flex-wrap gap-2">
                       {product.colors.map((color) => (
@@ -295,7 +327,7 @@ const ProductDetail = () => {
                   </div>
                 )}
 
-                <div className="mb-5">
+                <div className="mb-4">
                   <p className="mb-2 text-sm font-semibold text-gray-700">Description</p>
                   <p className="text-sm leading-relaxed text-gray-600">{product.description}</p>
                 </div>
@@ -304,7 +336,7 @@ const ProductDetail = () => {
                   <button
                     onClick={handleAddToCart}
                     disabled={isAdding || isOutOfStock}
-                    className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-70 sm:w-fit"
                   >
                     <ShoppingCart size={15} />
                     {isOutOfStock ? "Out of Stock" : isAdding ? "Adding..." : "Add To Cart"}
@@ -318,8 +350,8 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1fr]">
-              <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
                 <h2 className="mb-4 text-xl font-bold text-gray-900">Customer Reviews</h2>
                 {isReviewsLoading && <p className="text-sm text-gray-600">Loading reviews...</p>}
                 {!isReviewsLoading && reviewError && <p className="text-sm text-red-600">{reviewError}</p>}
@@ -356,7 +388,7 @@ const ProductDetail = () => {
                 )}
               </section>
 
-              <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
                 <h2 className="mb-4 text-xl font-bold text-gray-900">Write a Review</h2>
                 <form onSubmit={handleReviewSubmit} className="space-y-4">
                   <p className="text-sm text-gray-600">
@@ -399,6 +431,41 @@ const ProductDetail = () => {
                 </form>
               </section>
             </div>
+
+            <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
+              <h2 className="mb-4 text-xl font-bold text-gray-900">You may like this</h2>
+              {isRelatedLoading && <p className="text-sm text-gray-600">Loading similar products...</p>}
+              {!isRelatedLoading && relatedProducts.length === 0 && (
+                <p className="text-sm text-gray-600">No more products in this category yet.</p>
+              )}
+              {!isRelatedLoading && relatedProducts.length > 0 && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {relatedProducts.map((item) => (
+                    <button
+                      key={item._id}
+                      onClick={() => navigate(`/products/${item._id}`)}
+                      className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-left transition hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <div className="aspect-square overflow-hidden bg-gray-50">
+                        {item.images?.[0] ? (
+                          <img
+                            src={item.images[0]}
+                            alt={item.name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs text-gray-500">No image</div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="line-clamp-2 text-sm font-semibold text-gray-900">{item.name}</p>
+                        <p className="mt-1 text-xs text-gray-500">LKR {item.price.toLocaleString()}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         )}
       </div>

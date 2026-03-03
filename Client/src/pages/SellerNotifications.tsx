@@ -45,12 +45,7 @@ const SellerNotifications = () => {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 to-indigo-50 p-6 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
-          <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">Seller Notifications</h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">
-            Track live alerts for orders, reviews, and low-stock products from one place.
-          </p>
-        </div>
+        
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
         <div className="mt-6 grid gap-6 md:grid-cols-3">

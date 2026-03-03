@@ -146,17 +146,15 @@ const AdminCategoryManagement = () => {
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-indigo-50 to-emerald-50 p-6 shadow-sm">
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">Category Management</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Add, update, and organize product categories with image support.
-          </p>
-        </div>
+        
 
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
-          <form onSubmit={handleCreate} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <form
+            onSubmit={handleCreate}
+            className="flex h-fit flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)]"
+          >
             <h2 className="text-lg font-semibold text-slate-900">Add New Category</h2>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
               <input
                 placeholder="Category name"
                 value={name}
@@ -199,7 +197,7 @@ const AdminCategoryManagement = () => {
             </button>
           </form>
 
-          <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+          <section className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:col-span-2 lg:max-h-[calc(100vh-7rem)]">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900">Existing Categories</h2>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
@@ -208,7 +206,7 @@ const AdminCategoryManagement = () => {
             </div>
             {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
             {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-3 overflow-y-auto pr-1">
               {categories.map((category) => (
                 <div
                   key={category._id}
@@ -252,7 +250,7 @@ const AdminCategoryManagement = () => {
                           type="button"
                           onClick={() => handleUpdateCategory(category._id)}
                           disabled={isUpdating}
-                          className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-70"
+                          className="inline-flex w-full items-center justify-center gap-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-70 sm:w-auto"
                         >
                           <Save size={14} />
                           {isUpdating ? "Saving..." : "Save"}
@@ -261,7 +259,7 @@ const AdminCategoryManagement = () => {
                           type="button"
                           onClick={cancelEditCategory}
                           disabled={isUpdating}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-70"
+                          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-70 sm:w-auto"
                         >
                           <X size={14} />
                           Cancel
@@ -289,7 +287,7 @@ const AdminCategoryManagement = () => {
                         <button
                           type="button"
                           onClick={() => startEditCategory(category)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
                         >
                           <Pencil size={14} />
                           Edit
@@ -298,7 +296,7 @@ const AdminCategoryManagement = () => {
                           type="button"
                           onClick={() => handleDelete(category._id)}
                           disabled={deletingCategoryId === category._id}
-                          className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-70"
+                          className="inline-flex w-full items-center justify-center gap-1 rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-70 sm:w-auto"
                         >
                           <Trash2 size={14} />
                           {deletingCategoryId === category._id ? "Removing..." : "Delete"}

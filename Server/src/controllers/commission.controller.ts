@@ -5,37 +5,23 @@ import { getApplicableCommissionRule } from "../utils/commission";
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
-const rangesOverlap = (
-  minA: number,
-  maxA: number | null | undefined,
-  minB: number,
-  maxB: number | null | undefined
-) => {
-  const upperA = maxA ?? Number.POSITIVE_INFINITY;
-  const upperB = maxB ?? Number.POSITIVE_INFINITY;
-  return minA <= upperB && minB <= upperA;
-};
-
 const hasConflictingActiveRule = async ({
   category,
   minQty,
-  maxQty,
   excludeRuleId,
 }: {
   category: string;
   minQty: number;
-  maxQty?: number | null;
   excludeRuleId?: string;
 }) => {
-  const existingRules = await CommissionRuleModel.find({
+  const conflict = await CommissionRuleModel.findOne({
     category,
     isActive: true,
+    minQty,
     ...(excludeRuleId ? { _id: { $ne: excludeRuleId } } : {}),
-  }).select("minQty maxQty");
+  }).select("_id");
 
-  return existingRules.some((rule) =>
-    rangesOverlap(minQty, maxQty ?? null, rule.minQty, rule.maxQty ?? null)
-  );
+  return Boolean(conflict);
 };
 
 export const getCommissionRules = async (_req: Request, res: Response) => {
@@ -51,10 +37,9 @@ export const getCommissionRules = async (_req: Request, res: Response) => {
 
 export const createCommissionRule = async (req: Request, res: Response) => {
   try {
-    const { category, minQty, maxQty, ratePercent, isActive } = req.body as {
+    const { category, minQty, ratePercent, isActive } = req.body as {
       category?: string;
       minQty?: number;
-      maxQty?: number | null;
       ratePercent?: number;
       isActive?: boolean;
     };
@@ -73,25 +58,17 @@ export const createCommissionRule = async (req: Request, res: Response) => {
     ) {
       return res.status(400).json({ message: "ratePercent must be between 0 and 100" });
     }
-    if (maxQty !== null && maxQty !== undefined && (!Number.isFinite(maxQty) || !Number.isInteger(maxQty))) {
-      return res.status(400).json({ message: "maxQty must be an integer when provided" });
-    }
     const validatedMinQty: number = minQty;
     const validatedRatePercent: number = ratePercent;
-    const validatedMaxQty = maxQty ?? null;
 
-    if (validatedMaxQty !== null && validatedMaxQty < validatedMinQty) {
-      return res.status(400).json({ message: "maxQty must be greater than or equal to minQty" });
-    }
     if ((isActive ?? true) === true) {
       const hasConflict = await hasConflictingActiveRule({
         category,
         minQty: validatedMinQty,
-        maxQty: validatedMaxQty,
       });
       if (hasConflict) {
         return res.status(409).json({
-          message: "Conflicting active commission rule exists for this category and quantity range",
+          message: "An active commission rule already exists for this category and start quantity",
         });
       }
     }
@@ -99,7 +76,6 @@ export const createCommissionRule = async (req: Request, res: Response) => {
     const rule = await CommissionRuleModel.create({
       category,
       minQty: validatedMinQty,
-      maxQty: validatedMaxQty,
       ratePercent: validatedRatePercent,
       isActive: isActive ?? true,
     });
@@ -114,9 +90,8 @@ export const createCommissionRule = async (req: Request, res: Response) => {
 export const updateCommissionRule = async (req: Request, res: Response) => {
   try {
     const ruleId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const { minQty, maxQty, ratePercent, isActive } = req.body as {
+    const { minQty, ratePercent, isActive } = req.body as {
       minQty?: number;
-      maxQty?: number | null;
       ratePercent?: number;
       isActive?: boolean;
     };
@@ -125,22 +100,11 @@ export const updateCommissionRule = async (req: Request, res: Response) => {
     if (!existing) return res.status(404).json({ message: "Commission rule not found" });
 
     const nextMinQty = minQty ?? existing.minQty;
-    const nextMaxQty = maxQty !== undefined ? maxQty : existing.maxQty;
     const nextRatePercent = ratePercent ?? existing.ratePercent;
     const nextIsActive = isActive ?? existing.isActive;
 
     if (!Number.isFinite(nextMinQty) || !Number.isInteger(nextMinQty) || nextMinQty < 1) {
       return res.status(400).json({ message: "minQty must be at least 1" });
-    }
-    if (
-      nextMaxQty !== null &&
-      nextMaxQty !== undefined &&
-      (!Number.isFinite(nextMaxQty) || !Number.isInteger(nextMaxQty))
-    ) {
-      return res.status(400).json({ message: "maxQty must be an integer when provided" });
-    }
-    if (nextMaxQty !== null && nextMaxQty !== undefined && nextMaxQty < nextMinQty) {
-      return res.status(400).json({ message: "maxQty must be greater than or equal to minQty" });
     }
     if (!Number.isFinite(nextRatePercent) || nextRatePercent < 0 || nextRatePercent > 100) {
       return res.status(400).json({ message: "ratePercent must be between 0 and 100" });
@@ -149,12 +113,11 @@ export const updateCommissionRule = async (req: Request, res: Response) => {
       const hasConflict = await hasConflictingActiveRule({
         category: existing.category.toString(),
         minQty: nextMinQty,
-        maxQty: nextMaxQty,
         excludeRuleId: ruleId,
       });
       if (hasConflict) {
         return res.status(409).json({
-          message: "Conflicting active commission rule exists for this category and quantity range",
+          message: "An active commission rule already exists for this category and start quantity",
         });
       }
     }
@@ -163,7 +126,6 @@ export const updateCommissionRule = async (req: Request, res: Response) => {
       ruleId,
       {
         ...(minQty !== undefined ? { minQty: nextMinQty } : {}),
-        ...(maxQty !== undefined ? { maxQty: nextMaxQty } : {}),
         ...(ratePercent !== undefined ? { ratePercent: nextRatePercent } : {}),
         ...(isActive !== undefined ? { isActive: nextIsActive } : {}),
       },
