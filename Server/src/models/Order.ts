@@ -2,10 +2,14 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IOrderItem {
   product: Types.ObjectId;
+  seller?: Types.ObjectId;
   qty: number;
   size?: string;
   color?: string;
   price: number;
+  commissionRate: number;
+  commissionAmount: number;
+  sellerNetAmount: number;
 }
 
 export interface IOrder extends Document {
@@ -24,10 +28,14 @@ const orderSchema = new Schema<IOrder>({
   items: [
     {
       product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+      seller: { type: Schema.Types.ObjectId, ref: "User" },
       qty: { type: Number, required: true },
       size: { type: String },
       color: { type: String },
-      price: { type: Number, required: true }
+      price: { type: Number, required: true },
+      commissionRate: { type: Number, default: 0 },
+      commissionAmount: { type: Number, default: 0 },
+      sellerNetAmount: { type: Number, default: 0 },
     }
   ],
   totalPrice: { type: Number, required: true },

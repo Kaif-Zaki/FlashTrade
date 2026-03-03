@@ -152,15 +152,17 @@ const ProductDetail = () => {
         setReviewUser({ name: profile.name, email: profile.email });
       }
 
-      const createdReview = await createReviewRequest({
+      const createdReviewResponse = await createReviewRequest({
         name: reviewName.trim(),
         email: reviewEmail.trim(),
         rating: Number(rating),
         review: review.trim(),
         productId: id,
       });
-      setReviews((prev) => [createdReview, ...prev]);
-      setReviewSuccess("Review submitted successfully");
+      if (createdReviewResponse.review.isApproved) {
+        setReviews((prev) => [createdReviewResponse.review, ...prev]);
+      }
+      setReviewSuccess(createdReviewResponse.message || "Review submitted successfully");
       setReviewForm({ rating: 5, review: "" });
     } catch (err) {
       if (err instanceof AxiosError && err.response?.status === 401) {

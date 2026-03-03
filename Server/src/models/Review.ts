@@ -6,6 +6,9 @@ export interface ICustomerReview extends Document {
   rating: number;
   review: string;
   productId?: string;
+  isApproved: boolean;
+  approvedBy?: mongoose.Types.ObjectId | null;
+  approvedAt?: Date | null;
   createdAt: Date;
 }
 
@@ -15,6 +18,9 @@ const customerReviewSchema = new Schema<ICustomerReview>({
   rating: { type: Number, required: true, min: 1, max: 5 },
   review: { type: String, required: true, trim: true },
   productId: { type: String, default: null },
+  isApproved: { type: Boolean, default: false, index: true },
+  approvedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  approvedAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

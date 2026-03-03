@@ -5,11 +5,14 @@ import {
   getOrderById,
   getAllOrders,
   getSellerOrders,
+  getSellerAnalytics,
   updateOrderStatus,
+  updateOrderPaymentStatus,
 } from "../controllers/order.controller";
 import { authenticateToken } from "../middlewares/authenticateToken";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
 import { USER_ROLES } from "../constants/roles";
+import { requireApprovedSeller } from "../middlewares/requireApprovedSeller";
 
 const orderRouter = Router();
 
@@ -25,7 +28,14 @@ orderRouter.get("/my/:orderId", authorizeRoles(USER_ROLES.CUSTOMER), getOrderByI
 orderRouter.get(
   "/seller",
   authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
   getSellerOrders
+);
+orderRouter.get(
+  "/seller/analytics",
+  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
+  getSellerAnalytics
 );
 
 // admin routes
@@ -35,7 +45,14 @@ orderRouter.get("/admin", authorizeRoles(USER_ROLES.ADMIN), getAllOrders);
 orderRouter.patch(
   "/:orderId/status",
   authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
   updateOrderStatus
+);
+orderRouter.patch(
+  "/:orderId/payment-status",
+  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
+  updateOrderPaymentStatus
 );
 
 export default orderRouter;

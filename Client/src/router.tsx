@@ -17,6 +17,14 @@ import Faqs from './pages/Faqs'
 import ShippingPolicy from './pages/ShippingPolicy'
 import OrderHistory from './pages/OrderHistory'
 import { USER_ROLES } from './types/Auth'
+import AdminManagement from './pages/AdminManagement'
+import SellerManagement from './pages/SellerManagement'
+import AdminCategoryManagement from './pages/AdminCategoryManagement'
+import SellerNotifications from './pages/SellerNotifications'
+import SellerOrderManagement from './pages/SellerOrderManagement'
+import SellerReviewManagement from './pages/SellerReviewManagement'
+import AdminAnalytics from './pages/AdminAnalytics'
+import AdminCommissionManagement from './pages/AdminCommissionManagement'
 
 export const router = createBrowserRouter([
   {
@@ -46,6 +54,24 @@ export const router = createBrowserRouter([
           {path:"checkout/customer-details",element:<CheckoutCustomerDetail/>},
           {path:"checkout/payment",element:<CheckoutPayment/>},
           {path:"orders",element:<OrderHistory/>},
+        ]
+      },
+      {
+        element:<AdminRoutes allowedRoles={[USER_ROLES.ADMIN]}/>,
+        children:[
+          {path:"admin/analytics",element:<AdminAnalytics/>},
+          {path:"admin/manage",element:<AdminManagement/>},
+          {path:"admin/categories",element:<AdminCategoryManagement/>},
+          {path:"admin/commissions",element:<AdminCommissionManagement/>},
+        ]
+      },
+      {
+        element:<AdminRoutes allowedRoles={[USER_ROLES.SELLER]}/>,
+        children:[
+          {path:"seller/manage",element:<SellerManagement/>},
+          {path:"seller/notifications",element:<SellerNotifications/>},
+          {path:"seller/orders",element:<SellerOrderManagement/>},
+          {path:"seller/reviews",element:<SellerReviewManagement/>},
         ]
       }
     ]

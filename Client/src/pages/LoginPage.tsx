@@ -13,6 +13,11 @@ export const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const getDefaultPathByRole = (role: "customer" | "seller" | "admin") => {
+    if (role === "admin") return "/admin/analytics";
+    if (role === "seller") return "/seller/manage";
+    return "/dashboard";
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,7 +27,7 @@ export const LoginPage = () => {
     try {
       const response = await loginRequest({ email, password });
       login(response.accessToken, response.role);
-      navigate("/dashboard");
+      navigate(getDefaultPathByRole(response.role));
     } catch (err) {
       if (err instanceof AxiosError) {
         setError(err.response?.data?.message || "Login failed");

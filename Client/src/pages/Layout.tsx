@@ -5,10 +5,16 @@ import LoadingAnimation from "../components/Loading.tsx";
 import Footer from "../components/Footer.tsx";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import AdminNavBar from "../components/AdminNavBar.tsx";
+import SellerNavBar from "../components/SellerNavBar.tsx";
 
 const Layout = () => {
-  const { isAuthenticating } = useAuth();
+  const { isAuthenticating, isLoggedIn, userRole } = useAuth();
   const location = useLocation();
+  const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
+  const showAdminNav = isLoggedIn && userRole === "admin";
+  const showSellerNav = isLoggedIn && userRole === "seller";
+  const showCustomerNav = !showAdminNav && !showSellerNav;
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -23,13 +29,17 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="sticky top-0 z-50">
-        <NavBar />
-      </div>
+      {!isAuthPage && (
+        <div className="sticky top-0 z-50">
+          {showAdminNav && <AdminNavBar />}
+          {showSellerNav && <SellerNavBar />}
+          {showCustomerNav && <NavBar />}
+        </div>
+      )}
       <main>
         <Outlet />
       </main>
-      <Footer />
+      {!isAuthPage && showCustomerNav && <Footer />}
     </div>
   );
 };

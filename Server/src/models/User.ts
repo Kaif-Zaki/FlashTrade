@@ -7,6 +7,7 @@ type User = {
     address?: string
     password : string
     role: UserRole
+    sellerApproved: boolean
     resetToken? : string | null
     resetTokenExpiry? : Date | null
 }
@@ -41,6 +42,11 @@ const userSchema = new mongoose.Schema<User>({
         type: String,
         enum: Object.values(USER_ROLES),
         default: USER_ROLES.CUSTOMER,
+        index: true,
+    },
+    sellerApproved: {
+        type: Boolean,
+        default: false,
         index: true,
     },
     resetToken: {

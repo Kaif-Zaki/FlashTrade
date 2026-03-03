@@ -7,6 +7,7 @@ import orderRouter from "./order.routes";
 import productRouter from "./product.routes";
 import contactRouter from "./review.routes";
 import emailRouter from "./email.routes";
+import commissionRouter from "./commission.routes";
 
 const rootRouter = Router();
 
@@ -18,5 +19,6 @@ rootRouter.use("/orders", orderRouter);
 rootRouter.use("/cart", cartRouter);
 rootRouter.use("/reviews", contactRouter);
 rootRouter.use("/email", emailRouter);
+rootRouter.use("/commissions", commissionRouter);
 
 export default rootRouter;

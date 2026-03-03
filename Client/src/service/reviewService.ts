@@ -8,7 +8,12 @@ export const getReviewsRequest = async (productId?: string): Promise<Review[]> =
   return response.data;
 };
 
-export const createReviewRequest = async (payload: CreateReviewPayload): Promise<Review> => {
+export const createReviewRequest = async (
+  payload: CreateReviewPayload
+): Promise<{ review: Review; message: string }> => {
   const response = await apiClient.post<{ review: Review }>("/reviews", payload);
-  return response.data.review;
+  return {
+    review: response.data.review,
+    message: (response.data as { message?: string }).message || "Review submitted",
+  };
 };

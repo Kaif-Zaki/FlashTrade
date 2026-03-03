@@ -5,6 +5,9 @@ export interface Review {
   rating: number;
   review: string;
   productId?: string;
+  productName?: string;
+  isApproved?: boolean;
+  approvedAt?: string | null;
   createdAt: string;
 }
 

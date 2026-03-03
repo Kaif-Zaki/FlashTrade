@@ -7,6 +7,7 @@ export interface AuthUser {
   email: string;
   address?: string;
   role: UserRole;
+  sellerApproved?: boolean;
 }
 
 interface LoginResponse extends AuthUser {

@@ -18,6 +18,11 @@ export const RegisterPage = () => {
   const [role, setRole] = useState<UserRole>(USER_ROLES.CUSTOMER);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const getDefaultPathByRole = (userRole: UserRole) => {
+    if (userRole === USER_ROLES.ADMIN) return "/admin/analytics";
+    if (userRole === USER_ROLES.SELLER) return "/seller/manage";
+    return "/dashboard";
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,7 +40,7 @@ export const RegisterPage = () => {
       await signupRequest({ name, email, password, address, role });
       const loginRes = await loginRequest({ email, password });
       login(loginRes.accessToken, loginRes.role);
-      navigate("/dashboard");
+      navigate(getDefaultPathByRole(loginRes.role));
     } catch (err) {
       if (err instanceof AxiosError) {
         setError(err.response?.data?.message || "Signup failed");

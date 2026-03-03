@@ -114,7 +114,10 @@ const PrivateDetailsPage = () => {
               <span className="font-semibold">Address:</span>{" "}
               {profile.address || "Not provided"}
             </p>
-            <p className="text-sm text-gray-500">User ID: {profile._id}</p>
+            <p>
+              <span className="font-semibold">Account Type:</span>{" "}
+              {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
+            </p>
           </div>
 
           <form

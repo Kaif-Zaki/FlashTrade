@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { ApiError } from "../errors/ApiError";
 import crypto from "crypto";
 import { USER_ROLES, type UserRole } from "../constants/roles";
+import { ProductModel } from "../models/Product";
 
 //implement jwt
 import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
@@ -47,6 +48,7 @@ export const signUp = async (
       address,
       password: hashedPassword,
       role: normalizedRole,
+      sellerApproved: normalizedRole !== USER_ROLES.SELLER,
     });
     await user.save();
 
@@ -59,6 +61,7 @@ export const signUp = async (
       email: user.email,
       address: user.address,
       role: user.role,
+      sellerApproved: user.sellerApproved,
     };
     res.status(201).json(userWithoutPassword);
   } catch (error: any) {
@@ -124,6 +127,7 @@ export const login = async (
       email: user.email,
       address: user.address,
       role: user.role,
+      sellerApproved: user.sellerApproved,
       accessToken,
     };
 
@@ -365,6 +369,281 @@ export const resetPassword = async (
    
 
     res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const bootstrapAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, name, password, address, setupSecret } = req.body as {
+      email?: string;
+      name?: string;
+      password?: string;
+      address?: string;
+      setupSecret?: string;
+    };
+
+    const expectedSecret = process.env.ADMIN_SETUP_SECRET;
+    if (!expectedSecret) {
+      throw new ApiError(500, "ADMIN_SETUP_SECRET is not configured");
+    }
+
+    if (!setupSecret || setupSecret !== expectedSecret) {
+      throw new ApiError(403, "Invalid admin setup secret");
+    }
+
+    const existingAdminCount = await UserModel.countDocuments({
+      role: USER_ROLES.ADMIN,
+    });
+
+    if (existingAdminCount > 0) {
+      throw new ApiError(
+        409,
+        "Admin already exists. Use admin-only endpoints for additional admins."
+      );
+    }
+
+    if (!email) {
+      throw new ApiError(400, "Email is required");
+    }
+
+    const existingUser = await UserModel.findOne({ email });
+
+    if (existingUser) {
+      existingUser.role = USER_ROLES.ADMIN;
+      existingUser.sellerApproved = true;
+      if (password) {
+        existingUser.password = await bcrypt.hash(password, 10);
+      }
+      await existingUser.save();
+
+      return res.status(200).json({
+        message: "Existing user promoted to admin",
+        user: {
+          _id: existingUser._id,
+          name: existingUser.name,
+          email: existingUser.email,
+          address: existingUser.address,
+          role: existingUser.role,
+          sellerApproved: existingUser.sellerApproved,
+        },
+      });
+    }
+
+    if (!name || !password) {
+      throw new ApiError(400, "Name and password are required for new admin");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const adminUser = await UserModel.create({
+      email,
+      name,
+      address,
+      password: hashedPassword,
+      role: USER_ROLES.ADMIN,
+      sellerApproved: true,
+    });
+
+    return res.status(201).json({
+      message: "Admin created successfully",
+      user: {
+        _id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        address: adminUser.address,
+        role: adminUser.role,
+        sellerApproved: adminUser.sellerApproved,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, name, password, address } = req.body as {
+      email?: string;
+      name?: string;
+      password?: string;
+      address?: string;
+    };
+
+    if (!email || !name || !password) {
+      throw new ApiError(400, "Name, email and password are required");
+    }
+
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      throw new ApiError(409, "User with this email already exists");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const adminUser = await UserModel.create({
+      email,
+      name,
+      address,
+      password: hashedPassword,
+      role: USER_ROLES.ADMIN,
+      sellerApproved: true,
+    });
+
+    res.status(201).json({
+      message: "Admin created successfully",
+      user: {
+        _id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        address: adminUser.address,
+        role: adminUser.role,
+        sellerApproved: adminUser.sellerApproved,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const promoteUserToAdmin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : req.params.userId;
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    user.role = USER_ROLES.ADMIN;
+    user.sellerApproved = true;
+    await user.save();
+
+    res.status(200).json({
+      message: "User promoted to admin successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        address: user.address,
+        role: user.role,
+        sellerApproved: user.sellerApproved,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPendingSellers = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const pendingSellers = await UserModel.find({
+      role: USER_ROLES.SELLER,
+      sellerApproved: { $ne: true },
+    }).select("-password");
+
+    res.status(200).json(pendingSellers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const approveSeller = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : req.params.userId;
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "Seller not found");
+    }
+    if (user.role !== USER_ROLES.SELLER) {
+      throw new ApiError(400, "User is not a seller");
+    }
+
+    user.sellerApproved = true;
+    await user.save();
+
+    res.status(200).json({
+      message: "Seller approved successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        address: user.address,
+        role: user.role,
+        sellerApproved: user.sellerApproved,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getApprovedSellers = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const approvedSellers = await UserModel.find({
+      role: USER_ROLES.SELLER,
+      sellerApproved: true,
+    }).select("-password");
+
+    res.status(200).json(approvedSellers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeSeller = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : req.params.userId;
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "Seller not found");
+    }
+    if (user.role !== USER_ROLES.SELLER) {
+      throw new ApiError(400, "User is not a seller");
+    }
+
+    await ProductModel.deleteMany({ seller: user._id });
+    await UserModel.findByIdAndDelete(user._id);
+
+    res.status(200).json({
+      message: "Seller removed successfully",
+      userId: user._id,
+    });
   } catch (error) {
     next(error);
   }

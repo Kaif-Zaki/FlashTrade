@@ -11,6 +11,7 @@ import {
 import { authenticateToken } from "../middlewares/authenticateToken";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
 import { USER_ROLES } from "../constants/roles";
+import { requireApprovedSeller } from "../middlewares/requireApprovedSeller";
 
 const productRouter = Router();
 
@@ -23,24 +24,28 @@ productRouter.get(
   "/seller/me",
   authenticateToken,
   authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
   getMyProducts
 );
 productRouter.post(
   "/",
   authenticateToken,
   authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
   createProduct
 );
 productRouter.put(
   "/:id",
   authenticateToken,
   authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
   updateProduct
 );
 productRouter.delete(
   "/:id",
   authenticateToken,
   authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  requireApprovedSeller,
   deleteProduct
 );
 productRouter.get("/:id", getProductById);

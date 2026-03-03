@@ -11,6 +11,11 @@ interface AuthProviderProps{
 }
 
 export const AuthProvider = ({children}: AuthProviderProps) => {
+    const getDefaultPathByRole = (role: UserRole) => {
+        if (role === "admin") return "/admin/analytics";
+        if (role === "seller") return "/seller/manage";
+        return "/dashboard";
+    };
 
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const[accessToken, setAccessToken] = useState<string>("")
@@ -69,7 +74,7 @@ export const AuthProvider = ({children}: AuthProviderProps) => {
 
                 const currentPath = window.location.pathname
                 if (currentPath === "/login" || currentPath === "/signup" || currentPath === "/"){
-                    router.navigate("/dashboard")
+                    router.navigate(getDefaultPathByRole(profile.data.role))
                 }
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
             }catch (error) {
