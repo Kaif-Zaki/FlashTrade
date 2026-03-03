@@ -3,6 +3,41 @@ import mongoose from "mongoose";
 import { CommissionRuleModel } from "../models/CommissionRule";
 import { getApplicableCommissionRule } from "../utils/commission";
 
+const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const rangesOverlap = (
+  minA: number,
+  maxA: number | null | undefined,
+  minB: number,
+  maxB: number | null | undefined
+) => {
+  const upperA = maxA ?? Number.POSITIVE_INFINITY;
+  const upperB = maxB ?? Number.POSITIVE_INFINITY;
+  return minA <= upperB && minB <= upperA;
+};
+
+const hasConflictingActiveRule = async ({
+  category,
+  minQty,
+  maxQty,
+  excludeRuleId,
+}: {
+  category: string;
+  minQty: number;
+  maxQty?: number | null;
+  excludeRuleId?: string;
+}) => {
+  const existingRules = await CommissionRuleModel.find({
+    category,
+    isActive: true,
+    ...(excludeRuleId ? { _id: { $ne: excludeRuleId } } : {}),
+  }).select("minQty maxQty");
+
+  return existingRules.some((rule) =>
+    rangesOverlap(minQty, maxQty ?? null, rule.minQty, rule.maxQty ?? null)
+  );
+};
+
 export const getCommissionRules = async (_req: Request, res: Response) => {
   try {
     const rules = await CommissionRuleModel.find().populate("category", "name").sort({
@@ -27,21 +62,45 @@ export const createCommissionRule = async (req: Request, res: Response) => {
     if (!category || !mongoose.Types.ObjectId.isValid(category)) {
       return res.status(400).json({ message: "Valid category is required" });
     }
-    if (!minQty || minQty < 1) {
+    if (typeof minQty !== "number" || !Number.isFinite(minQty) || !Number.isInteger(minQty) || minQty < 1) {
       return res.status(400).json({ message: "minQty must be at least 1" });
     }
-    if (ratePercent === undefined || ratePercent < 0 || ratePercent > 100) {
+    if (
+      typeof ratePercent !== "number" ||
+      !Number.isFinite(ratePercent) ||
+      ratePercent < 0 ||
+      ratePercent > 100
+    ) {
       return res.status(400).json({ message: "ratePercent must be between 0 and 100" });
     }
-    if (maxQty !== null && maxQty !== undefined && maxQty < minQty) {
+    if (maxQty !== null && maxQty !== undefined && (!Number.isFinite(maxQty) || !Number.isInteger(maxQty))) {
+      return res.status(400).json({ message: "maxQty must be an integer when provided" });
+    }
+    const validatedMinQty: number = minQty;
+    const validatedRatePercent: number = ratePercent;
+    const validatedMaxQty = maxQty ?? null;
+
+    if (validatedMaxQty !== null && validatedMaxQty < validatedMinQty) {
       return res.status(400).json({ message: "maxQty must be greater than or equal to minQty" });
+    }
+    if ((isActive ?? true) === true) {
+      const hasConflict = await hasConflictingActiveRule({
+        category,
+        minQty: validatedMinQty,
+        maxQty: validatedMaxQty,
+      });
+      if (hasConflict) {
+        return res.status(409).json({
+          message: "Conflicting active commission rule exists for this category and quantity range",
+        });
+      }
     }
 
     const rule = await CommissionRuleModel.create({
       category,
-      minQty,
-      maxQty: maxQty ?? null,
-      ratePercent,
+      minQty: validatedMinQty,
+      maxQty: validatedMaxQty,
+      ratePercent: validatedRatePercent,
       isActive: isActive ?? true,
     });
 
@@ -62,18 +121,54 @@ export const updateCommissionRule = async (req: Request, res: Response) => {
       isActive?: boolean;
     };
 
+    const existing = await CommissionRuleModel.findById(ruleId);
+    if (!existing) return res.status(404).json({ message: "Commission rule not found" });
+
+    const nextMinQty = minQty ?? existing.minQty;
+    const nextMaxQty = maxQty !== undefined ? maxQty : existing.maxQty;
+    const nextRatePercent = ratePercent ?? existing.ratePercent;
+    const nextIsActive = isActive ?? existing.isActive;
+
+    if (!Number.isFinite(nextMinQty) || !Number.isInteger(nextMinQty) || nextMinQty < 1) {
+      return res.status(400).json({ message: "minQty must be at least 1" });
+    }
+    if (
+      nextMaxQty !== null &&
+      nextMaxQty !== undefined &&
+      (!Number.isFinite(nextMaxQty) || !Number.isInteger(nextMaxQty))
+    ) {
+      return res.status(400).json({ message: "maxQty must be an integer when provided" });
+    }
+    if (nextMaxQty !== null && nextMaxQty !== undefined && nextMaxQty < nextMinQty) {
+      return res.status(400).json({ message: "maxQty must be greater than or equal to minQty" });
+    }
+    if (!Number.isFinite(nextRatePercent) || nextRatePercent < 0 || nextRatePercent > 100) {
+      return res.status(400).json({ message: "ratePercent must be between 0 and 100" });
+    }
+    if (nextIsActive) {
+      const hasConflict = await hasConflictingActiveRule({
+        category: existing.category.toString(),
+        minQty: nextMinQty,
+        maxQty: nextMaxQty,
+        excludeRuleId: ruleId,
+      });
+      if (hasConflict) {
+        return res.status(409).json({
+          message: "Conflicting active commission rule exists for this category and quantity range",
+        });
+      }
+    }
+
     const updated = await CommissionRuleModel.findByIdAndUpdate(
       ruleId,
       {
-        ...(minQty !== undefined ? { minQty } : {}),
-        ...(maxQty !== undefined ? { maxQty } : {}),
-        ...(ratePercent !== undefined ? { ratePercent } : {}),
-        ...(isActive !== undefined ? { isActive } : {}),
+        ...(minQty !== undefined ? { minQty: nextMinQty } : {}),
+        ...(maxQty !== undefined ? { maxQty: nextMaxQty } : {}),
+        ...(ratePercent !== undefined ? { ratePercent: nextRatePercent } : {}),
+        ...(isActive !== undefined ? { isActive: nextIsActive } : {}),
       },
       { new: true, runValidators: true }
     ).populate("category", "name");
-
-    if (!updated) return res.status(404).json({ message: "Commission rule not found" });
 
     res.json(updated);
   } catch (error) {
@@ -106,8 +201,8 @@ export const estimateCommission = async (req: Request, res: Response) => {
     if (!categoryId || !mongoose.Types.ObjectId.isValid(categoryId)) {
       return res.status(400).json({ message: "Valid categoryId is required" });
     }
-    if (!Number.isFinite(parsedQty) || parsedQty <= 0) {
-      return res.status(400).json({ message: "qty must be greater than 0" });
+    if (!Number.isFinite(parsedQty) || !Number.isInteger(parsedQty) || parsedQty <= 0) {
+      return res.status(400).json({ message: "qty must be an integer greater than 0" });
     }
     if (!Number.isFinite(parsedUnitPrice) || parsedUnitPrice < 0) {
       return res.status(400).json({ message: "unitPrice must be a valid number" });
@@ -115,9 +210,9 @@ export const estimateCommission = async (req: Request, res: Response) => {
 
     const rule = await getApplicableCommissionRule(categoryId, parsedQty);
     const ratePercent = rule?.ratePercent || 0;
-    const grossAmount = parsedQty * parsedUnitPrice;
-    const commissionAmount = (grossAmount * ratePercent) / 100;
-    const sellerNetAmount = grossAmount - commissionAmount;
+    const grossAmount = roundMoney(parsedQty * parsedUnitPrice);
+    const commissionAmount = roundMoney((grossAmount * ratePercent) / 100);
+    const sellerNetAmount = roundMoney(grossAmount - commissionAmount);
 
     res.json({
       ratePercent,

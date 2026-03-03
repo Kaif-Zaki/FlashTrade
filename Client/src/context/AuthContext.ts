@@ -4,7 +4,9 @@ import type { UserRole } from "../types/Auth";
 export interface AuthContextType{
     isLoggedIn: boolean
     userRole: UserRole | null
-    login: (accessToken: string, role: UserRole) => void
+    sellerApproved: boolean | null
+    sellerActive: boolean | null
+    login: (accessToken: string, role: UserRole, sellerApproved?: boolean, sellerActive?: boolean) => void
     hasRole: (...roles: UserRole[]) => boolean
     logout: () => Promise<void> | void
     isAuthenticating: boolean

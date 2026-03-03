@@ -179,45 +179,105 @@ const AdminAnalytics = () => {
   }, [orders, products, users]);
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-sm">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-indigo-50 to-emerald-50 p-6 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
           <div className="flex items-center gap-2">
-            <BarChart3 size={18} />
-            <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+            <BarChart3 size={18} className="text-slate-900 dark:text-slate-100" />
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Analytics Dashboard</h1>
           </div>
-          <p className="mt-1 text-sm text-slate-200">Live marketplace metrics for admin decisions.</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Live marketplace metrics for admin decisions.</p>
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        {isLoading && <p className="mt-4 text-sm text-slate-600">Loading analytics...</p>}
+        {isLoading && <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Loading analytics...</p>}
 
         {!isLoading && (
           <>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <MetricCard title="Total Users" value={analytics.totalUsers} icon={<Users size={17} />} />
-              <MetricCard title="Total Products" value={products.length} icon={<Boxes size={17} />} />
-              <MetricCard title="Total Orders" value={analytics.totalOrders} icon={<ShoppingBag size={17} />} />
+              <MetricCard title="Total Users" value={analytics.totalUsers} icon={<Users size={17} />} tone="sky" />
+              <MetricCard title="Total Products" value={products.length} icon={<Boxes size={17} />} tone="indigo" />
+              <MetricCard title="Total Orders" value={analytics.totalOrders} icon={<ShoppingBag size={17} />} tone="emerald" />
               <MetricCard
                 title="Gross Revenue"
                 value={`LKR ${analytics.grossRevenue.toLocaleString()}`}
                 icon={<BarChart3 size={17} />}
+                tone="amber"
               />
             </div>
 
-            <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Platform Commission</p>
+            <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Platform Commission</p>
               <p className="mt-2 text-2xl font-bold text-amber-600">
                 LKR {analytics.totalCommission.toLocaleString()}
               </p>
-              <p className="mt-2 text-xs text-slate-600">
+              <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
                 Seller Net Payout: LKR {analytics.totalSellerNet.toLocaleString()}
               </p>
             </div>
 
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top Category Bars</h2>
+                <div className="mt-4 space-y-3">
+                  {analytics.topCategories.length === 0 && (
+                    <p className="text-sm text-slate-600">No category data yet.</p>
+                  )}
+                  {analytics.topCategories.map(([name, count]) => (
+                    <BarRow
+                      key={`bar-${name}`}
+                      label={name}
+                      value={count}
+                      max={Math.max(...analytics.topCategories.map(([, itemCount]) => itemCount), 1)}
+                      color="bg-indigo-500"
+                    />
+                  ))}
+                </div>
+              </section>
+
+              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Order Status Candles</h2>
+                <div className="mt-5 flex items-end justify-around gap-3">
+                  <CandleBar
+                    label="Processing"
+                    value={analytics.orderStatus.processing}
+                    max={Math.max(
+                      analytics.orderStatus.processing,
+                      analytics.orderStatus.shipped,
+                      analytics.orderStatus.delivered,
+                      1
+                    )}
+                    color="bg-amber-500"
+                  />
+                  <CandleBar
+                    label="Shipped"
+                    value={analytics.orderStatus.shipped}
+                    max={Math.max(
+                      analytics.orderStatus.processing,
+                      analytics.orderStatus.shipped,
+                      analytics.orderStatus.delivered,
+                      1
+                    )}
+                    color="bg-sky-500"
+                  />
+                  <CandleBar
+                    label="Delivered"
+                    value={analytics.orderStatus.delivered}
+                    max={Math.max(
+                      analytics.orderStatus.processing,
+                      analytics.orderStatus.shipped,
+                      analytics.orderStatus.delivered,
+                      1
+                    )}
+                    color="bg-emerald-500"
+                  />
+                </div>
+              </section>
+            </div>
+
             <div className="mt-6 grid gap-6 lg:grid-cols-3">
-              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Users Breakdown</h2>
+              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Users Breakdown</h2>
                 <div className="mt-4 space-y-3 text-sm">
                   <Row label="Customers" value={analytics.totalCustomers} />
                   <Row label="Sellers" value={analytics.totalSellers} />
@@ -225,16 +285,16 @@ const AdminAnalytics = () => {
                 </div>
               </section>
 
-              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Seller Status</h2>
+              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Seller Status</h2>
                 <div className="mt-4 space-y-3 text-sm">
                   <Row label="Approved Sellers" value={approvedSellers} />
                   <Row label="Pending Sellers" value={pendingSellers} />
                 </div>
               </section>
 
-              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Payment Status</h2>
+              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Payment Status</h2>
                 <div className="mt-4 space-y-3 text-sm">
                   <Row label="Paid Orders" value={analytics.paidOrders} />
                   <Row label="COD Pending" value={analytics.codPending} />
@@ -243,11 +303,11 @@ const AdminAnalytics = () => {
               </section>
             </div>
 
-            <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
+            <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Transaction Integrity Check
               </h2>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 Use these checks to verify admin-side commission and transaction correctness.
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -272,8 +332,8 @@ const AdminAnalytics = () => {
             </section>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Order Pipeline</h2>
+              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Order Pipeline</h2>
                 <div className="mt-4 space-y-3 text-sm">
                   <Row label="Processing" value={analytics.orderStatus.processing} />
                   <Row label="Shipped" value={analytics.orderStatus.shipped} />
@@ -281,8 +341,8 @@ const AdminAnalytics = () => {
                 </div>
               </section>
 
-              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Top Categories</h2>
+              <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Top Categories</h2>
                 <div className="mt-4 space-y-2">
                   {analytics.topCategories.length === 0 && (
                     <p className="text-sm text-slate-600">No category data yet.</p>
@@ -294,8 +354,8 @@ const AdminAnalytics = () => {
               </section>
             </div>
 
-            <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Recent Orders</h2>
+            <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+              <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Recent Orders</h2>
               <div className="mt-4 space-y-3">
                 {analytics.recentOrders.length === 0 && (
                   <p className="text-sm text-slate-600">No orders yet.</p>
@@ -306,15 +366,15 @@ const AdminAnalytics = () => {
                   return (
                     <div
                       key={order._id}
-                      className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 sm:flex-row sm:items-center sm:justify-between"
+                      className="flex flex-col gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between"
                     >
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">Order #{order._id.slice(-8)}</p>
-                        <p className="text-xs text-slate-600">Customer: {customerName}</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Order #{order._id.slice(-8)}</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-300">Customer: {customerName}</p>
                       </div>
                       <div className="text-left sm:text-right">
                         <p className="text-sm font-bold text-emerald-700">LKR {order.totalPrice.toLocaleString()}</p>
-                        <p className="text-xs text-slate-600">
+                        <p className="text-xs text-slate-600 dark:text-slate-300">
                           {order.orderStatus} | {order.paymentStatus}
                         </p>
                       </div>
@@ -330,20 +390,88 @@ const AdminAnalytics = () => {
   );
 };
 
-const MetricCard = ({ title, value, icon }: { title: string; value: string | number; icon: ReactNode }) => (
-  <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+const MetricCard = ({
+  title,
+  value,
+  icon,
+  tone,
+}: {
+  title: string;
+  value: string | number;
+  icon: ReactNode;
+  tone: "sky" | "indigo" | "emerald" | "amber";
+}) => (
+  <div
+    className={`rounded-2xl p-4 shadow-sm ring-1 ${
+      tone === "sky"
+        ? "border border-sky-200 bg-sky-50/70 ring-sky-100 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-700"
+        : tone === "indigo"
+          ? "border border-indigo-200 bg-indigo-50/70 ring-indigo-100 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-700"
+          : tone === "emerald"
+            ? "border border-emerald-200 bg-emerald-50/70 ring-emerald-100 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-700"
+            : "border border-amber-200 bg-amber-50/70 ring-amber-100 dark:border-slate-700 dark:bg-slate-900 dark:ring-slate-700"
+    }`}
+  >
     <div className="flex items-center justify-between">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</p>
-      <div className="text-slate-600">{icon}</div>
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</p>
+      <div className="text-slate-600 dark:text-slate-300">{icon}</div>
     </div>
-    <p className="mt-3 text-2xl font-bold text-slate-900">{value}</p>
+    <p className="mt-3 text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
   </div>
 );
 
+const BarRow = ({
+  label,
+  value,
+  max,
+  color,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}) => {
+  const width = Math.max(8, Math.round((value / Math.max(max, 1)) * 100));
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-xs text-slate-600 dark:text-slate-300">
+        <span>{label}</span>
+        <span className="font-semibold text-slate-900 dark:text-slate-100">{value}</span>
+      </div>
+      <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-700">
+        <div className={`h-2.5 rounded-full ${color}`} style={{ width: `${width}%` }} />
+      </div>
+    </div>
+  );
+};
+
+const CandleBar = ({
+  label,
+  value,
+  max,
+  color,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}) => {
+  const height = Math.max(18, Math.round((value / Math.max(max, 1)) * 120));
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative flex h-32 items-end">
+        <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-slate-300 dark:bg-slate-600" />
+        <span className={`relative z-10 w-7 rounded-md ${color}`} style={{ height }} />
+      </div>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</span>
+    </div>
+  );
+};
+
 const Row = ({ label, value }: { label: string; value: number | string }) => (
-  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-    <span className="text-slate-600">{label}</span>
-    <span className="font-semibold text-slate-900">{value}</span>
+  <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-800">
+    <span className="text-slate-600 dark:text-slate-300">{label}</span>
+    <span className="font-semibold text-slate-900 dark:text-slate-100">{value}</span>
   </div>
 );
 

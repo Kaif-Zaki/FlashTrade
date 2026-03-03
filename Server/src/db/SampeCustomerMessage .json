@@ -1,5 +1,6 @@
 [
   {
+    "_id": { "$oid": "654000000000000000000001" },
     "name": "Zaki",
     "email": "zaki@example.com",
     "subject": "Inquiry about Blue T-Shirt",
@@ -7,6 +8,7 @@
     "createdAt": "2026-02-26T06:00:00.000Z"
   },
   {
+    "_id": { "$oid": "654000000000000000000002" },
     "name": "Nisha Perera",
     "email": "nisha@example.com",
     "subject": "Order delay",
@@ -14,6 +16,7 @@
     "createdAt": "2026-02-25T14:30:00.000Z"
   },
   {
+    "_id": { "$oid": "654000000000000000000003" },
     "name": "Kasun Fernando",
     "email": "kasun@example.com",
     "subject": "Product color options",
@@ -21,6 +24,7 @@
     "createdAt": "2026-02-24T10:15:00.000Z"
   },
   {
+    "_id": { "$oid": "654000000000000000000004" },
     "name": "Anjali Silva",
     "email": "anjali@example.com",
     "subject": "Payment issue",
@@ -28,6 +32,7 @@
     "createdAt": "2026-02-23T18:45:00.000Z"
   },
   {
+    "_id": { "$oid": "654000000000000000000005" },
     "name": "Ramesh Jayawardena",
     "email": "ramesh@example.com",
     "subject": "Product suggestion",

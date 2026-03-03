@@ -8,7 +8,9 @@ import { ProductModel } from "../models/Product";
 export const getCart = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId as string | undefined;
+    const userRole = req.userRole;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (userRole !== "customer") return res.status(403).json({ message: "Only customers can access cart" });
 
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
     if (!cart) return res.json({ items: [] });
@@ -25,8 +27,10 @@ export const addToCart = async (req: Request, res: Response) => {
   try {
     const { product, qty, size, color } = req.body;
     const userId = (req as any).userId as string | undefined;
+    const userRole = req.userRole;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
-    if (!product || typeof qty !== "number" || qty <= 0) {
+    if (userRole !== "customer") return res.status(403).json({ message: "Only customers can access cart" });
+    if (!product || typeof qty !== "number" || !Number.isInteger(qty) || qty <= 0) {
       return res.status(400).json({ message: "Invalid product or quantity" });
     }
 
@@ -42,10 +46,20 @@ export const addToCart = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid color for this product" });
     }
 
+    if (targetProduct.stock <= 0) {
+      return res.status(400).json({
+        message: "This product is out of stock",
+        availableStock: 0,
+      });
+    }
+
     let cart = await Cart.findOne({ user: userId });
     if (!cart) {
       if (qty > targetProduct.stock) {
-        return res.status(400).json({ message: "Not enough stock" });
+        return res.status(400).json({
+          message: `Only ${targetProduct.stock} item(s) available in stock`,
+          availableStock: targetProduct.stock,
+        });
       }
       cart = new Cart({ user: userId, items: [{ product, qty, size, color }] });
     } else {
@@ -57,12 +71,18 @@ export const addToCart = async (req: Request, res: Response) => {
       );
       if (itemIndex > -1) {
         if (cart.items[itemIndex].qty + qty > targetProduct.stock) {
-          return res.status(400).json({ message: "Not enough stock" });
+          return res.status(400).json({
+            message: `Only ${targetProduct.stock} item(s) available in stock`,
+            availableStock: targetProduct.stock,
+          });
         }
         cart.items[itemIndex].qty += qty;
       } else {
         if (qty > targetProduct.stock) {
-          return res.status(400).json({ message: "Not enough stock" });
+          return res.status(400).json({
+            message: `Only ${targetProduct.stock} item(s) available in stock`,
+            availableStock: targetProduct.stock,
+          });
         }
         cart.items.push({ product, qty, size, color });
       }
@@ -79,7 +99,9 @@ export const removeFromCart = async (req: Request, res: Response) => {
   try {
     const { productId, size, color } = req.body;
     const userId = (req as any).userId as string | undefined;
+    const userRole = req.userRole;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (userRole !== "customer") return res.status(403).json({ message: "Only customers can access cart" });
     const cart = await Cart.findOne({ user: userId });
     if (!cart) return res.status(404).json({ message: "Cart not found" });
 

@@ -1,12 +1,25 @@
 import { type Request, type Response } from "express";
 import mongoose from "mongoose";
 import { ProductModel } from "../models/Product";
-import { USER_ROLES } from "../constants/roles";
 
 const productPopulate = [
   { path: "category" },
   { path: "seller", select: "name email role" },
 ];
+
+const sanitizeSizePrices = (sizePrices?: Record<string, unknown>, sizes?: string[]) => {
+  if (!sizePrices || typeof sizePrices !== "object") return {};
+  const allowedSizes = new Set((sizes || []).map((size) => size.trim()));
+  const normalized = Object.entries(sizePrices).reduce<Record<string, number>>((acc, [size, rawPrice]) => {
+    const sizeKey = size.trim();
+    if (!sizeKey || (allowedSizes.size > 0 && !allowedSizes.has(sizeKey))) return acc;
+    const parsed = Number(rawPrice);
+    if (!Number.isFinite(parsed) || parsed < 0) return acc;
+    acc[sizeKey] = parsed;
+    return acc;
+  }, {});
+  return normalized;
+};
 
 export const getProducts = async (req: Request, res: Response) => {
   try {
@@ -59,16 +72,29 @@ export const getMyProducts = async (req: Request, res: Response) => {
   }
 };
 
+export const getSellerProductsForAdmin = async (req: Request, res: Response) => {
+  try {
+    const sellerId = Array.isArray(req.params.sellerId) ? req.params.sellerId[0] : req.params.sellerId;
+    if (!mongoose.Types.ObjectId.isValid(sellerId)) {
+      return res.status(400).json({ message: "Invalid seller id" });
+    }
+
+    const products = await ProductModel.find({ seller: sellerId }).populate(productPopulate);
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err });
+  }
+};
+
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const authUserId = req.userId;
-    const authUserRole = req.userRole;
 
-    if (!authUserId || !authUserRole) {
+    if (!authUserId || req.userRole !== "seller") {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { name, description, price, stock, images, sizes, colors, category, sellerId } = req.body as {
+    const { name, description, price, stock, images, sizes, colors, sizePrices, category } = req.body as {
       name: string;
       description: string;
       price: number;
@@ -76,12 +102,9 @@ export const createProduct = async (req: Request, res: Response) => {
       images: string[];
       sizes?: string[];
       colors?: string[];
+      sizePrices?: Record<string, unknown>;
       category: string;
-      sellerId?: string;
     };
-
-    const seller =
-      authUserRole === USER_ROLES.ADMIN && sellerId ? sellerId : authUserId;
 
     const product = await ProductModel.create({
       name,
@@ -91,8 +114,9 @@ export const createProduct = async (req: Request, res: Response) => {
       images,
       sizes,
       colors,
+      sizePrices: sanitizeSizePrices(sizePrices, sizes),
       category,
-      seller,
+      seller: authUserId,
     });
 
     const createdProduct = await ProductModel.findById(product._id).populate(productPopulate);
@@ -105,11 +129,10 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   try {
     const authUserId = req.userId;
-    const authUserRole = req.userRole;
     const rawProductId = req.params.id;
     const productId = Array.isArray(rawProductId) ? rawProductId[0] : rawProductId;
 
-    if (!authUserId || !authUserRole) {
+    if (!authUserId || req.userRole !== "seller") {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
@@ -120,19 +143,22 @@ export const updateProduct = async (req: Request, res: Response) => {
     const existingProduct = await ProductModel.findById(productId);
     if (!existingProduct) return res.status(404).json({ message: "Product not found" });
 
-    const isOwner = existingProduct.seller.toString() === authUserId;
-    const isAdmin = authUserRole === USER_ROLES.ADMIN;
-
-    if (!isOwner && !isAdmin) {
+    if (existingProduct.seller.toString() !== authUserId) {
       return res.status(403).json({ message: "Forbidden for this product" });
     }
 
-    const { sellerId, ...updates } = req.body as Record<string, unknown> & {
-      sellerId?: string;
-    };
+    const updates = req.body as Record<string, unknown>;
 
-    if (isAdmin && sellerId) {
-      updates.seller = sellerId;
+    if (updates.sizes || updates.sizePrices) {
+      const nextSizes = Array.isArray(updates.sizes)
+        ? (updates.sizes as string[])
+        : (existingProduct.sizes || []);
+      const rawSizePrices =
+        updates.sizePrices !== undefined
+          ? (updates.sizePrices as Record<string, unknown> | undefined)
+          : Object.fromEntries((existingProduct.sizePrices || new Map()).entries());
+      const nextSizePrices = sanitizeSizePrices(rawSizePrices, nextSizes);
+      updates.sizePrices = nextSizePrices;
     }
 
     const updated = await ProductModel.findByIdAndUpdate(productId, updates, {
@@ -149,11 +175,10 @@ export const updateProduct = async (req: Request, res: Response) => {
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
     const authUserId = req.userId;
-    const authUserRole = req.userRole;
     const rawProductId = req.params.id;
     const productId = Array.isArray(rawProductId) ? rawProductId[0] : rawProductId;
 
-    if (!authUserId || !authUserRole) {
+    if (!authUserId || req.userRole !== "seller") {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
@@ -164,15 +189,31 @@ export const deleteProduct = async (req: Request, res: Response) => {
     const existingProduct = await ProductModel.findById(productId);
     if (!existingProduct) return res.status(404).json({ message: "Product not found" });
 
-    const isOwner = existingProduct.seller.toString() === authUserId;
-    const isAdmin = authUserRole === USER_ROLES.ADMIN;
-
-    if (!isOwner && !isAdmin) {
+    if (existingProduct.seller.toString() !== authUserId) {
       return res.status(403).json({ message: "Forbidden for this product" });
     }
 
     await ProductModel.findByIdAndDelete(productId);
     res.json({ message: "Product deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err });
+  }
+};
+
+export const deleteProductAsAdmin = async (req: Request, res: Response) => {
+  try {
+    const rawProductId = req.params.id;
+    const productId = Array.isArray(rawProductId) ? rawProductId[0] : rawProductId;
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "Invalid product id" });
+    }
+
+    const existingProduct = await ProductModel.findById(productId);
+    if (!existingProduct) return res.status(404).json({ message: "Product not found" });
+
+    await ProductModel.findByIdAndDelete(productId);
+    res.json({ message: "Product removed by admin successfully", productId });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
   }

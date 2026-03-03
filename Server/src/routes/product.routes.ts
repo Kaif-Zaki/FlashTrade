@@ -6,6 +6,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  deleteProductAsAdmin,
+  getSellerProductsForAdmin,
   getMyProducts,
 } from "../controllers/product.controller";
 import { authenticateToken } from "../middlewares/authenticateToken";
@@ -23,30 +25,42 @@ productRouter.get("/category/:categoryId", getProductsByCategory);
 productRouter.get(
   "/seller/me",
   authenticateToken,
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   getMyProducts
+);
+productRouter.get(
+  "/admin/seller/:sellerId",
+  authenticateToken,
+  authorizeRoles(USER_ROLES.ADMIN),
+  getSellerProductsForAdmin
 );
 productRouter.post(
   "/",
   authenticateToken,
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   createProduct
 );
 productRouter.put(
   "/:id",
   authenticateToken,
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   updateProduct
 );
 productRouter.delete(
   "/:id",
   authenticateToken,
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   deleteProduct
+);
+productRouter.delete(
+  "/admin/:id",
+  authenticateToken,
+  authorizeRoles(USER_ROLES.ADMIN),
+  deleteProductAsAdmin
 );
 productRouter.get("/:id", getProductById);
 

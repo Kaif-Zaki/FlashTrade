@@ -8,10 +8,12 @@ import { getProfileRequest } from "../service/authService.ts";
 import { addToCartRequest } from "../service/cartService.ts";
 import { createReviewRequest, getReviewsRequest } from "../service/reviewService.ts";
 import type { Review } from "../types/Review";
+import { useAuth } from "../context/useAuth.ts";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isLoggedIn, userRole } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +33,11 @@ const ProductDetail = () => {
     rating: 5,
     review: "",
   });
+  const isOutOfStock = !!product && product.stock <= 0;
+  const selectedSizePrice =
+    product && selectedSize ? product.sizePrices?.[selectedSize] : undefined;
+  const displayPrice = Number.isFinite(selectedSizePrice) ? Number(selectedSizePrice) : product?.price ?? 0;
+  const canBuy = !isLoggedIn || userRole === "customer";
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -100,6 +107,14 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!product) return;
+    if (!canBuy) {
+      setAddMessage("Seller and admin accounts cannot place orders.");
+      return;
+    }
+    if (product.stock <= 0) {
+      setAddMessage("Out of stock");
+      return;
+    }
     setAddMessage("");
     setIsAdding(true);
 
@@ -205,21 +220,27 @@ const ProductDetail = () => {
 
               <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                 <h1 className="mb-2 text-2xl font-bold text-gray-900">{product.name}</h1>
-                <p className="mb-4 text-sm text-gray-500">Stock: {product.stock}</p>
-                <p className="mb-6 text-2xl font-bold text-gray-900">LKR {product.price.toLocaleString()}</p>
+                {isOutOfStock ? (
+                  <p className="mb-4 text-sm font-semibold text-red-600">Out of stock</p>
+                ) : (
+                  <p className="mb-4 text-sm text-gray-500">Stock: {product.stock}</p>
+                )}
+                <p className="mb-6 text-2xl font-bold text-gray-900">LKR {displayPrice.toLocaleString()}</p>
 
                 <div className="mb-5">
                   <p className="mb-2 text-sm font-semibold text-gray-700">Quantity</p>
                   <div className="flex w-fit items-center gap-3 rounded-lg border border-gray-300 px-3 py-2">
                     <button
                       onClick={() => setQty((prev) => Math.max(1, prev - 1))}
+                      disabled={isOutOfStock}
                       className="w-5 text-center text-lg font-bold text-gray-700"
                     >
                       -
                     </button>
                     <span className="w-6 text-center text-sm font-bold">{qty}</span>
                     <button
-                      onClick={() => setQty((prev) => prev + 1)}
+                      onClick={() => setQty((prev) => Math.min(product.stock, prev + 1))}
+                      disabled={isOutOfStock || qty >= product.stock}
                       className="w-5 text-center text-lg font-bold text-gray-700"
                     >
                       +
@@ -242,6 +263,11 @@ const ProductDetail = () => {
                           }`}
                         >
                           {size}
+                          {product.sizePrices?.[size] !== undefined && (
+                            <span className="ml-1 text-[11px] opacity-90">
+                              (LKR {Number(product.sizePrices[size]).toLocaleString()})
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -274,14 +300,20 @@ const ProductDetail = () => {
                   <p className="text-sm leading-relaxed text-gray-600">{product.description}</p>
                 </div>
 
-                <button
-                  onClick={handleAddToCart}
-                  disabled={isAdding}
-                  className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-700 disabled:opacity-70"
-                >
-                  <ShoppingCart size={15} />
-                  {isAdding ? "Adding..." : "Add To Cart"}
-                </button>
+                {canBuy ? (
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={isAdding || isOutOfStock}
+                    className="flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <ShoppingCart size={15} />
+                    {isOutOfStock ? "Out of Stock" : isAdding ? "Adding..." : "Add To Cart"}
+                  </button>
+                ) : (
+                  <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
+                    Seller accounts are sell-only. Switch to a customer account to buy.
+                  </p>
+                )}
                 {addMessage && <p className="mt-3 text-sm text-gray-700">{addMessage}</p>}
               </div>
             </div>

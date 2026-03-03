@@ -27,13 +27,13 @@ orderRouter.get("/my/:orderId", authorizeRoles(USER_ROLES.CUSTOMER), getOrderByI
 // seller routes
 orderRouter.get(
   "/seller",
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   getSellerOrders
 );
 orderRouter.get(
   "/seller/analytics",
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   getSellerAnalytics
 );
@@ -44,13 +44,13 @@ orderRouter.get("/admin", authorizeRoles(USER_ROLES.ADMIN), getAllOrders);
 // seller/admin routes
 orderRouter.patch(
   "/:orderId/status",
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   updateOrderStatus
 );
 orderRouter.patch(
   "/:orderId/payment-status",
-  authorizeRoles(USER_ROLES.SELLER, USER_ROLES.ADMIN),
+  authorizeRoles(USER_ROLES.SELLER),
   requireApprovedSeller,
   updateOrderPaymentStatus
 );

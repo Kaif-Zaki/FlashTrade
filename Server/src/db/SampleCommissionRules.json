@@ -1,0 +1,50 @@
+[
+  {
+    "_id": { "$oid": "655000000000000000000001" },
+    "category": { "$oid": "651000000000000000000001" },
+    "minQty": 1,
+    "maxQty": 5,
+    "ratePercent": 8,
+    "isActive": true
+  },
+  {
+    "_id": { "$oid": "655000000000000000000002" },
+    "category": { "$oid": "651000000000000000000001" },
+    "minQty": 6,
+    "maxQty": null,
+    "ratePercent": 10,
+    "isActive": true
+  },
+  {
+    "_id": { "$oid": "655000000000000000000003" },
+    "category": { "$oid": "651000000000000000000002" },
+    "minQty": 1,
+    "maxQty": 3,
+    "ratePercent": 12,
+    "isActive": true
+  },
+  {
+    "_id": { "$oid": "655000000000000000000004" },
+    "category": { "$oid": "651000000000000000000002" },
+    "minQty": 4,
+    "maxQty": null,
+    "ratePercent": 15,
+    "isActive": true
+  },
+  {
+    "_id": { "$oid": "655000000000000000000005" },
+    "category": { "$oid": "651000000000000000000004" },
+    "minQty": 1,
+    "maxQty": null,
+    "ratePercent": 9,
+    "isActive": true
+  },
+  {
+    "_id": { "$oid": "655000000000000000000006" },
+    "category": { "$oid": "651000000000000000000006" },
+    "minQty": 1,
+    "maxQty": null,
+    "ratePercent": 11,
+    "isActive": true
+  }
+]

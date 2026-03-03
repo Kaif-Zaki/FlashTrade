@@ -17,9 +17,20 @@ const ProductList = () => {
   const [error, setError] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(0);
   const [isPriceInitialized, setIsPriceInitialized] = useState(false);
+
+  const normalizeText = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+
+  const filterKeywords: Record<string, string[]> = {
+    men: ["men", "mens", "male", "man"],
+    women: ["women", "womens", "female", "lady", "ladies", "girl"],
+    electronics: ["electronics", "electronic", "gadget", "device", "tech"],
+    sneakers: ["sneaker", "sneakers", "shoe", "shoes", "footwear"],
+  };
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -70,11 +81,10 @@ const ProductList = () => {
 
   useEffect(() => {
     if (!isPriceInitialized && priceBounds.max > 0) {
-      setMinPrice(priceBounds.min);
       setMaxPrice(priceBounds.max);
       setIsPriceInitialized(true);
     }
-  }, [isPriceInitialized, priceBounds.max, priceBounds.min]);
+  }, [isPriceInitialized, priceBounds.max]);
 
   useEffect(() => {
     if (categoryId) {
@@ -91,15 +101,15 @@ const ProductList = () => {
   };
 
   const toggleColor = (color: string) => {
+    const normalized = color.trim().toLowerCase();
     setSelectedColors((prev) =>
-      prev.includes(color) ? prev.filter((item) => item !== color) : [...prev, color]
+      prev.includes(normalized) ? prev.filter((item) => item !== normalized) : [...prev, normalized]
     );
   };
 
   const clearFilters = () => {
     setSelectedCategories(categoryId ? [categoryId] : []);
     setSelectedColors([]);
-    setMinPrice(priceBounds.min);
     setMaxPrice(priceBounds.max);
   };
 
@@ -110,11 +120,18 @@ const ProductList = () => {
       result = result.filter((product) => product.category?._id === categoryId);
     }
 
-    if (filter === "men") {
+    if (filter && filterKeywords[filter]) {
+      const keywords = filterKeywords[filter];
       result = result.filter((product) => {
-        const name = product.name.toLowerCase();
-        const category = product.category?.name?.toLowerCase() || "";
-        return name.includes("men") || category.includes("men") || category.includes("clothing");
+        const normalizedName = normalizeText(product.name || "");
+        const normalizedCategory = normalizeText(product.category?.name || "");
+        return keywords.some((keyword) => {
+          const normalizedKeyword = normalizeText(keyword);
+          return (
+            normalizedName.includes(normalizedKeyword) ||
+            normalizedCategory.includes(normalizedKeyword)
+          );
+        });
       });
     }
 
@@ -132,23 +149,35 @@ const ProductList = () => {
     }
 
     if (selectedCategories.length > 0) {
-      result = result.filter((product) => selectedCategories.includes(product.category?._id || ""));
+      const selectedCategoryIdSet = new Set(selectedCategories.map((id) => id.trim().toLowerCase()));
+      result = result.filter((product) =>
+        selectedCategoryIdSet.has((product.category?._id || "").trim().toLowerCase())
+      );
     }
 
     if (selectedColors.length > 0) {
       result = result.filter((product) =>
-        (product.colors || []).some((color) => selectedColors.includes(color))
+        (product.colors || []).some((color) => selectedColors.includes(color.trim().toLowerCase()))
       );
     }
 
-    result = result.filter((product) => product.price >= minPrice && product.price <= maxPrice);
+    result = result.filter((product) => product.price <= maxPrice);
 
     return result;
-  }, [displayProducts, filter, categoryId, searchQuery, selectedCategories, selectedColors, minPrice, maxPrice]);
+  }, [displayProducts, filter, categoryId, searchQuery, selectedCategories, selectedColors, maxPrice]);
+
+  const emptyCategoryLabel = useMemo(() => {
+    if (categoryId) {
+      const selected = allCategories.find((category) => category.id === categoryId);
+      return selected?.name || "Selected";
+    }
+    if (filter) return filter.charAt(0).toUpperCase() + filter.slice(1);
+    return "";
+  }, [allCategories, categoryId, filter]);
 
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-8">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="h-fit rounded-2xl bg-white p-5 shadow-sm lg:sticky lg:top-24">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900">Filters</h2>
@@ -159,53 +188,42 @@ const ProductList = () => {
 
           <div className="mb-6">
             <p className="mb-2 text-sm font-semibold text-gray-900">Price Range</p>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                min={priceBounds.min}
-                max={maxPrice}
-                value={minPrice}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setMinPrice(Math.max(priceBounds.min, Math.min(value, maxPrice)));
-                }}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
-              />
-              <input
-                type="number"
-                min={minPrice}
-                max={priceBounds.max}
-                value={maxPrice}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setMaxPrice(Math.min(priceBounds.max, Math.max(value, minPrice)));
-                }}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
-              />
-            </div>
-            <div className="mt-3">
-              <input
-                type="range"
-                min={priceBounds.min}
-                max={priceBounds.max}
-                value={minPrice}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setMinPrice(Math.min(value, maxPrice));
-                }}
-                className="w-full accent-gray-900"
-              />
-              <input
-                type="range"
-                min={priceBounds.min}
-                max={priceBounds.max}
-                value={maxPrice}
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  setMaxPrice(Math.max(value, minPrice));
-                }}
-                className="w-full accent-gray-900"
-              />
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-gray-600">Up to</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">LKR</span>
+                  <input
+                    type="number"
+                    min={priceBounds.min}
+                    max={priceBounds.max}
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      setMaxPrice(Math.min(priceBounds.max, Math.max(priceBounds.min, value)));
+                    }}
+                    className="w-28 rounded-md border border-gray-300 bg-white px-2 py-1 text-right text-sm font-semibold text-gray-900 outline-none focus:border-gray-500"
+                  />
+                </div>
+              </div>
+              <p className="mt-2 text-lg font-bold text-gray-900">LKR {maxPrice.toLocaleString()}</p>
+              <div className="mt-3">
+                <input
+                  type="range"
+                  min={priceBounds.min}
+                  max={priceBounds.max}
+                  value={maxPrice}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setMaxPrice(value);
+                  }}
+                  className="w-full accent-gray-900"
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[11px] text-gray-500">
+                <span>LKR {priceBounds.min.toLocaleString()}</span>
+                <span>LKR {priceBounds.max.toLocaleString()}</span>
+              </div>
             </div>
           </div>
 
@@ -233,7 +251,7 @@ const ProductList = () => {
                 <label key={color} className="flex items-center gap-2 text-sm text-gray-700">
                   <input
                     type="checkbox"
-                    checked={selectedColors.includes(color)}
+                    checked={selectedColors.includes(color.trim().toLowerCase())}
                     onChange={() => toggleColor(color)}
                     className="h-4 w-4 accent-gray-900"
                   />
@@ -267,7 +285,11 @@ const ProductList = () => {
           {isLoading && <p className="text-sm text-gray-600">Loading products...</p>}
           {!isLoading && error && <p className="text-sm text-red-600">{error}</p>}
           {!isLoading && !error && filteredProducts.length === 0 && (
-            <p className="text-sm text-gray-600">No products available.</p>
+            <p className="text-sm text-gray-600">
+              {categoryId || filter
+                ? `${emptyCategoryLabel} category item not available.`
+                : "No products available."}
+            </p>
           )}
 
           {!isLoading && !error && filteredProducts.length > 0 && (
@@ -279,6 +301,11 @@ const ProductList = () => {
                   className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
                 >
                 <div className="relative aspect-square overflow-hidden bg-gray-50">
+                  {product.stock <= 0 && (
+                    <span className="absolute left-2 top-2 z-10 rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                      Out of stock
+                    </span>
+                  )}
                   {product.images?.[0] ? (
                     <img
                       src={product.images[0]}
@@ -296,7 +323,9 @@ const ProductList = () => {
                     <p className="mb-3 line-clamp-2 text-xs text-gray-500">{product.description}</p>
                     <div className="mt-auto flex items-center justify-between">
                       <p className="text-sm font-bold text-gray-900">LKR {product.price.toLocaleString()}</p>
-                      <p className="text-[11px] text-gray-500">Stock: {product.stock}</p>
+                      <p className={`text-[11px] ${product.stock <= 0 ? "font-semibold text-red-600" : "text-gray-500"}`}>
+                        {product.stock <= 0 ? "Out of stock" : `Stock: ${product.stock}`}
+                      </p>
                     </div>
                   </div>
                 </button>

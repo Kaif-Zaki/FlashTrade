@@ -21,9 +21,12 @@ export const requireApprovedSeller = async (
       return next(new ApiError(403, "Forbidden"));
     }
 
-    const seller = await UserModel.findById(req.userId).select("sellerApproved");
+    const seller = await UserModel.findById(req.userId).select("sellerApproved sellerActive");
     if (!seller || !seller.sellerApproved) {
       return next(new ApiError(403, "Seller account is pending admin approval"));
+    }
+    if (seller.sellerActive === false) {
+      return next(new ApiError(403, "Seller account is currently inactive"));
     }
 
     next();

@@ -25,6 +25,9 @@ import SellerOrderManagement from './pages/SellerOrderManagement'
 import SellerReviewManagement from './pages/SellerReviewManagement'
 import AdminAnalytics from './pages/AdminAnalytics'
 import AdminCommissionManagement from './pages/AdminCommissionManagement'
+import SellerAnalyticsPage from './pages/SellerAnalytics'
+import AdminSellerProducts from './pages/AdminSellerProducts'
+import SellerApprovalRequired from './pages/SellerApprovalRequired'
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +64,7 @@ export const router = createBrowserRouter([
         children:[
           {path:"admin/analytics",element:<AdminAnalytics/>},
           {path:"admin/manage",element:<AdminManagement/>},
+          {path:"admin/sellers/:sellerId/products",element:<AdminSellerProducts/>},
           {path:"admin/categories",element:<AdminCategoryManagement/>},
           {path:"admin/commissions",element:<AdminCommissionManagement/>},
         ]
@@ -68,6 +72,13 @@ export const router = createBrowserRouter([
       {
         element:<AdminRoutes allowedRoles={[USER_ROLES.SELLER]}/>,
         children:[
+          {path:"seller/approval-required",element:<SellerApprovalRequired/>},
+        ]
+      },
+      {
+        element:<AdminRoutes allowedRoles={[USER_ROLES.SELLER]} requireApprovedSeller={true}/>,
+        children:[
+          {path:"seller/analytics",element:<SellerAnalyticsPage/>},
           {path:"seller/manage",element:<SellerManagement/>},
           {path:"seller/notifications",element:<SellerNotifications/>},
           {path:"seller/orders",element:<SellerOrderManagement/>},

@@ -9,11 +9,12 @@ import AdminNavBar from "../components/AdminNavBar.tsx";
 import SellerNavBar from "../components/SellerNavBar.tsx";
 
 const Layout = () => {
-  const { isAuthenticating, isLoggedIn, userRole } = useAuth();
+  const { isAuthenticating, isLoggedIn, userRole, sellerApproved, sellerActive } = useAuth();
   const location = useLocation();
   const isAuthPage = location.pathname === "/login" || location.pathname === "/signup";
   const showAdminNav = isLoggedIn && userRole === "admin";
-  const showSellerNav = isLoggedIn && userRole === "seller";
+  const showSellerNav =
+    isLoggedIn && userRole === "seller" && sellerApproved === true && sellerActive !== false;
   const showCustomerNav = !showAdminNav && !showSellerNav;
 
   useEffect(() => {

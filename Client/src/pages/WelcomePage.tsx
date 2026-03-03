@@ -56,26 +56,38 @@ export default function WelcomePage() {
   }, []);
 
   const heroProduct = useMemo(() => products[0], [products]);
-  const heroRightTopProduct = useMemo(
-    () =>
-      products.find((product) => {
-        const name = product.name.toLowerCase();
-        return (
-          name.includes("airpod") ||
-          name.includes("headphone") ||
-          name.includes("earbud")
-        );
-      }) || products[1],
-    [products],
-  );
-  const heroRightBottomProduct = useMemo(
-    () =>
-      products.find((product) => {
-        const name = product.name.toLowerCase();
-        return name.includes("sneaker") || name.includes("shoe");
-      }) || products[2],
-    [products],
-  );
+  const heroRightTopProduct = useMemo(() => {
+    const heroId = heroProduct?._id;
+    const preferred = products.find((product) => {
+      if (product._id === heroId) return false;
+      const name = product.name.toLowerCase();
+      return (
+        name.includes("airpod") ||
+        name.includes("headphone") ||
+        name.includes("earbud")
+      );
+    });
+    if (preferred) return preferred;
+    return products.find((product) => product._id !== heroId) || products[1];
+  }, [products, heroProduct]);
+
+  const heroRightBottomProduct = useMemo(() => {
+    const blockedIds = new Set([heroProduct?._id, heroRightTopProduct?._id].filter(Boolean));
+    const preferred = products.find((product) => {
+      if (blockedIds.has(product._id)) return false;
+      const name = product.name.toLowerCase();
+      return (
+        name.includes("sneaker") ||
+        name.includes("shoe") ||
+        name.includes("bag") ||
+        name.includes("watch") ||
+        name.includes("shirt") ||
+        name.includes("dress")
+      );
+    });
+    if (preferred) return preferred;
+    return products.find((product) => !blockedIds.has(product._id)) || products[2];
+  }, [products, heroProduct, heroRightTopProduct]);
   const latestProducts = useMemo(() => products.slice(0, 8), [products]);
   const goToProduct = (id?: string) => {
     if (!id) return;
@@ -84,7 +96,7 @@ export default function WelcomePage() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f3]">
-      <main className="mx-auto w-full max-w-7xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-6xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.6fr_1fr]">
           <div className="relative min-h-[320px] overflow-hidden rounded-3xl sm:min-h-[420px]">
             {heroProduct?.images?.[0] ? (

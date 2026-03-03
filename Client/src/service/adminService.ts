@@ -1,5 +1,6 @@
 import { apiClient } from "./apiClient";
 import type { AuthUser } from "./authService";
+import type { Product } from "../types/Product";
 
 export interface CreateAdminPayload {
   name: string;
@@ -16,6 +17,16 @@ interface AdminResponse {
 interface RemoveSellerResponse {
   message: string;
   userId: string;
+}
+
+interface SellerStatusResponse {
+  message: string;
+  user: AuthUser;
+}
+
+interface AdminSellerDetailResponse {
+  seller: AuthUser;
+  totalProducts: number;
 }
 
 export interface AdminOrder {
@@ -66,6 +77,28 @@ export const getApprovedSellersRequest = async () => {
 
 export const removeSellerRequest = async (userId: string) => {
   const response = await apiClient.delete<RemoveSellerResponse>(`/auth/sellers/${userId}`);
+  return response.data;
+};
+
+export const updateSellerActiveStatusRequest = async (userId: string, sellerActive: boolean) => {
+  const response = await apiClient.patch<SellerStatusResponse>(`/auth/sellers/${userId}/status`, {
+    sellerActive,
+  });
+  return response.data;
+};
+
+export const getSellerDetailRequest = async (userId: string) => {
+  const response = await apiClient.get<AdminSellerDetailResponse>(`/auth/sellers/${userId}`);
+  return response.data;
+};
+
+export const getSellerProductsForAdminRequest = async (sellerId: string) => {
+  const response = await apiClient.get<Product[]>(`/products/admin/seller/${sellerId}`);
+  return response.data;
+};
+
+export const removeSellerProductAsAdminRequest = async (productId: string) => {
+  const response = await apiClient.delete<{ message: string; productId: string }>(`/products/admin/${productId}`);
   return response.data;
 };
 

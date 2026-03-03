@@ -96,11 +96,30 @@ export default function Navbar() {
     setShowSuggestions(false);
   };
 
+  const normalizeText = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  const tokenizeText = (value: string) =>
+    value
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .map((token) => normalizeText(token))
+      .filter(Boolean);
+
   const findCategoryIdByNames = (names: string[]) => {
-    const normalizedNames = names.map((name) => name.toLowerCase());
-    const found = allCategories.find((category) =>
-      normalizedNames.includes(category.name.trim().toLowerCase())
-    );
+    const normalizedNames = names.map((name) => normalizeText(name));
+    const found = allCategories.find((category) => {
+      const normalizedCategory = normalizeText(category.name || "");
+      const categoryTokens = tokenizeText(category.name || "");
+      return normalizedNames.some(
+        (name) =>
+          normalizedCategory === name ||
+          categoryTokens.includes(name) ||
+          normalizedCategory.startsWith(name) ||
+          (name.length >= 4 && normalizedCategory.includes(name))
+      );
+    });
     return found?._id || "";
   };
 
@@ -110,12 +129,12 @@ export default function Navbar() {
   const sneakersCategoryId = findCategoryIdByNames(["sneakers", "sneaker", "footwear", "shoes", "shoe"]);
 
   const menLink = menCategoryId ? `/products?categoryId=${menCategoryId}` : "/products?filter=men";
-  const womenLink = womenCategoryId ? `/products?categoryId=${womenCategoryId}` : "/products";
-  const electronicsLink = electronicsCategoryId ? `/products?categoryId=${electronicsCategoryId}` : "/products";
-  const sneakersLink = sneakersCategoryId ? `/products?categoryId=${sneakersCategoryId}` : "/products";
+  const womenLink = womenCategoryId ? `/products?categoryId=${womenCategoryId}` : "/products?filter=women";
+  const electronicsLink = electronicsCategoryId ? `/products?categoryId=${electronicsCategoryId}` : "/products?filter=electronics";
+  const sneakersLink = sneakersCategoryId ? `/products?categoryId=${sneakersCategoryId}` : "/products?filter=sneakers";
 
   return (
-    <header className="w-full bg-[#f5f5f3]">
+    <header className="w-full bg-[#f5f5f3] dark:bg-slate-900">
       {/* TOP BAR */}
       <div className="flex flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-10 lg:py-4">
         {/* LOGO */}
@@ -137,14 +156,14 @@ export default function Navbar() {
             onBlur={() => {
               setTimeout(() => setShowSuggestions(false), 120);
             }}
-            className="w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-10 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-slate-100"
           />
-          <button type="submit" className="absolute right-4 top-2.5 text-gray-500">
+          <button type="submit" className="absolute right-4 top-2.5 text-gray-500 dark:text-slate-300">
             <Search className="h-5 w-5" />
           </button>
 
           {showSuggestions && normalizedSearch && (
-            <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+            <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
               {matchedProducts.length > 0 ? (
                 <div className="py-1">
                   {matchedProducts.map((product) => (
@@ -155,20 +174,20 @@ export default function Navbar() {
                         setShowSuggestions(false);
                         navigate(`/products/${product._id}`);
                       }}
-                      className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                      className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-slate-800"
                     >
                       {product.name}
                     </button>
                   ))}
                   <button
                     type="submit"
-                    className="block w-full border-t border-gray-100 px-4 py-2 text-left text-sm font-semibold text-blue-600 hover:bg-gray-100"
+                    className="block w-full border-t border-gray-100 px-4 py-2 text-left text-sm font-semibold text-blue-600 hover:bg-gray-100 dark:border-slate-700 dark:hover:bg-slate-800"
                   >
                     Search for "{searchTerm.trim()}"
                   </button>
                 </div>
               ) : (
-                <p className="px-4 py-3 text-sm text-gray-500">No matching products</p>
+                <p className="px-4 py-3 text-sm text-gray-500 dark:text-slate-400">No matching products</p>
               )}
             </div>
           )}
@@ -206,12 +225,12 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/login" className="font-medium hover:text-blue-600">
-                Login
-              </Link>
-              <Link to="/signup" className="font-medium hover:text-blue-600">
-                Signup
-              </Link>
+                <Link to="/login" className="font-medium text-slate-800 hover:text-blue-600 dark:text-slate-200">
+                  Login
+                </Link>
+                <Link to="/signup" className="font-medium text-slate-800 hover:text-blue-600 dark:text-slate-200">
+                  Signup
+                </Link>
             </>
           )}
         </div>
@@ -227,16 +246,46 @@ export default function Navbar() {
             <NavItem text="All Category" active={isProductsPage && !filter && !activeCategoryId} />
           </Link>
           <Link to={menLink}>
-            <NavItem text="Men" active={isProductsPage && (activeCategoryId === menCategoryId || (!menCategoryId && filter === "men"))} />
+            <NavItem
+              text="Men"
+              active={
+                isProductsPage &&
+                ((!!activeCategoryId && !!menCategoryId && activeCategoryId === menCategoryId) ||
+                  (!menCategoryId && filter === "men"))
+              }
+            />
           </Link>
           <Link to={womenLink}>
-            <NavItem text="Women" active={isProductsPage && !!womenCategoryId && activeCategoryId === womenCategoryId} />
+            <NavItem
+              text="Women"
+              active={
+                isProductsPage &&
+                ((!!activeCategoryId && !!womenCategoryId && activeCategoryId === womenCategoryId) ||
+                  (!womenCategoryId && filter === "women"))
+              }
+            />
           </Link>
           <Link to={electronicsLink}>
-            <NavItem text="Electronics" active={isProductsPage && !!electronicsCategoryId && activeCategoryId === electronicsCategoryId} />
+            <NavItem
+              text="Electronics"
+              active={
+                isProductsPage &&
+                ((!!activeCategoryId &&
+                  !!electronicsCategoryId &&
+                  activeCategoryId === electronicsCategoryId) ||
+                  (!electronicsCategoryId && filter === "electronics"))
+              }
+            />
           </Link>
           <Link to={sneakersLink}>
-            <NavItem text="Sneakers" active={isProductsPage && !!sneakersCategoryId && activeCategoryId === sneakersCategoryId} />
+            <NavItem
+              text="Sneakers"
+              active={
+                isProductsPage &&
+                ((!!activeCategoryId && !!sneakersCategoryId && activeCategoryId === sneakersCategoryId) ||
+                  (!sneakersCategoryId && filter === "sneakers"))
+              }
+            />
           </Link>
           <Link to="/contact">
             <NavItem text="Contact Us" active={location.pathname === "/contact"} />
@@ -263,8 +312,8 @@ function NavItem({
 }) {
   return (
     <div
-      className={`flex shrink-0 items-center gap-2 cursor-pointer hover:text-blue-600 ${
-        active ? "text-red-500" : "text-black"
+      className={`flex shrink-0 items-center gap-2 cursor-pointer transition-colors hover:text-blue-600 ${
+        active ? "text-blue-700 dark:text-blue-400" : "text-slate-800 dark:text-slate-200"
       }`}
     >
       {icon && (

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
-import { Briefcase, Boxes, ClipboardList, Plus, Trash2, MessageSquareCheck } from "lucide-react";
+import { Briefcase, Boxes, ClipboardList, MessageSquareCheck, Pencil, Plus, Trash2, X } from "lucide-react";
 import { getCategoriesRequest } from "../service/categoryService";
 import type { Category } from "../types/Category";
 import type { Product } from "../types/Product";
@@ -9,12 +9,11 @@ import {
   createSellerProductRequest,
   deleteSellerProductRequest,
   estimateSellerCommissionRequest,
-  getSellerAnalyticsRequest,
   getSellerOrdersRequest,
   getPendingSellerReviewsRequest,
   getSellerProductsRequest,
+  updateSellerProductRequest,
   updateSellerOrderStatusRequest,
-  type SellerAnalytics,
   type SellerOrder,
   type SellerOrderStatus,
   type SellerPendingReview,
@@ -27,7 +26,6 @@ const SellerManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<SellerOrder[]>([]);
   const [pendingReviews, setPendingReviews] = useState<SellerPendingReview[]>([]);
-  const [sellerAnalytics, setSellerAnalytics] = useState<SellerAnalytics | null>(null);
   const [activeTab, setActiveTab] = useState<"products" | "orders" | "reviews">("products");
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -41,6 +39,7 @@ const SellerManagement = () => {
     name: "",
     description: "",
     price: "",
+    sizePrices: {} as Record<string, string>,
     stock: "",
     imageUrl: "",
     sizes: [] as string[],
@@ -48,6 +47,7 @@ const SellerManagement = () => {
     category: "",
   });
   const [colorDraft, setColorDraft] = useState("");
+  const [editingProductId, setEditingProductId] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [createMessage, setCreateMessage] = useState("");
   const [commissionPreview, setCommissionPreview] = useState<{
@@ -59,9 +59,9 @@ const SellerManagement = () => {
   const stats = useMemo(() => {
     const totalProducts = products.length;
     const activeOrders = orders.filter((o) => o.orderStatus !== "delivered").length;
-    const totalRevenue = sellerAnalytics?.monthlySales || orders.reduce((sum, order) => sum + (order.sellerTotal || 0), 0);
+    const totalRevenue = orders.reduce((sum, order) => sum + (order.sellerTotal || 0), 0);
     return { totalProducts, activeOrders, totalRevenue };
-  }, [products, orders, sellerAnalytics]);
+  }, [products, orders]);
 
   const loadProducts = async () => {
     setLoadingProducts(true);
@@ -115,20 +115,10 @@ const SellerManagement = () => {
     }
   };
 
-  const loadSellerAnalytics = async () => {
-    try {
-      const analytics = await getSellerAnalyticsRequest();
-      setSellerAnalytics(analytics);
-    } catch {
-      setSellerAnalytics(null);
-    }
-  };
-
   useEffect(() => {
     loadProducts();
     loadOrders();
     loadPendingReviews();
-    loadSellerAnalytics();
   }, []);
 
   useEffect(() => {
@@ -158,6 +148,22 @@ const SellerManagement = () => {
     calculateCommissionPreview();
   }, [form.category, form.price, form.stock]);
 
+  const resetProductForm = () => {
+    setForm({
+      name: "",
+      description: "",
+      price: "",
+      sizePrices: {},
+      stock: "",
+      imageUrl: "",
+      sizes: [],
+      colors: [],
+      category: "",
+    });
+    setColorDraft("");
+    setEditingProductId("");
+  };
+
   const handleCreateProduct = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -175,38 +181,47 @@ const SellerManagement = () => {
       return;
     }
 
+    const sizePricesPayload = form.sizes.reduce<Record<string, number>>((acc, size) => {
+      const raw = form.sizePrices[size];
+      if (raw === undefined || raw === null || raw === "") return acc;
+      const parsed = Number(raw);
+      if (Number.isFinite(parsed) && parsed >= 0) {
+        acc[size] = parsed;
+      }
+      return acc;
+    }, {});
+
+    const payload = {
+      name: form.name.trim(),
+      description: form.description.trim(),
+      price: priceNum,
+      stock: stockNum,
+      category: form.category,
+      images: [form.imageUrl.trim()],
+      sizes: form.sizes,
+      sizePrices: sizePricesPayload,
+      colors: form.colors,
+    };
+
     setIsCreating(true);
     try {
-      const created = await createSellerProductRequest({
-        name: form.name.trim(),
-        description: form.description.trim(),
-        price: priceNum,
-        stock: stockNum,
-        category: form.category,
-        images: [form.imageUrl.trim()],
-        sizes: form.sizes,
-        colors: form.colors,
-      });
-
-      setProducts((prev) => [created, ...prev]);
-      await loadSellerAnalytics();
-      setCreateMessage("Product added successfully");
-      setForm({
-        name: "",
-        description: "",
-        price: "",
-        stock: "",
-        imageUrl: "",
-        sizes: [],
-        colors: [],
-        category: "",
-      });
-      setColorDraft("");
+      if (editingProductId) {
+        const updated = await updateSellerProductRequest(editingProductId, payload);
+        setProducts((prev) => prev.map((item) => (item._id === editingProductId ? updated : item)));
+        setCreateMessage("Product updated successfully");
+      } else {
+        const created = await createSellerProductRequest(payload);
+        setProducts((prev) => [created, ...prev]);
+        setCreateMessage("Product added successfully");
+      }
+      resetProductForm();
     } catch (err) {
       if (err instanceof AxiosError) {
-        setError(err.response?.data?.message || "Failed to create product");
+        setError(
+          err.response?.data?.message || (editingProductId ? "Failed to update product" : "Failed to create product")
+        );
       } else {
-        setError("Failed to create product");
+        setError(editingProductId ? "Failed to update product" : "Failed to create product");
       }
     } finally {
       setIsCreating(false);
@@ -219,7 +234,6 @@ const SellerManagement = () => {
     try {
       await deleteSellerProductRequest(productId);
       setProducts((prev) => prev.filter((item) => item._id !== productId));
-      await loadSellerAnalytics();
     } catch (err) {
       if (err instanceof AxiosError) {
         setError(err.response?.data?.message || "Failed to delete product");
@@ -237,7 +251,6 @@ const SellerManagement = () => {
     try {
       await updateSellerOrderStatusRequest(orderId, status);
       await loadOrders();
-      await loadSellerAnalytics();
       window.dispatchEvent(new Event("seller-notification-updated"));
     } catch (err) {
       if (err instanceof AxiosError) {
@@ -271,9 +284,17 @@ const SellerManagement = () => {
   const toggleSize = (size: string) => {
     setForm((prev) => {
       const exists = prev.sizes.includes(size);
+      const nextSizes = exists ? prev.sizes.filter((value) => value !== size) : [...prev.sizes, size];
+      const nextSizePrices = { ...prev.sizePrices };
+      if (exists) {
+        delete nextSizePrices[size];
+      } else {
+        nextSizePrices[size] = prev.price || "";
+      }
       return {
         ...prev,
-        sizes: exists ? prev.sizes.filter((value) => value !== size) : [...prev.sizes, size],
+        sizes: nextSizes,
+        sizePrices: nextSizePrices,
       };
     });
   };
@@ -292,83 +313,55 @@ const SellerManagement = () => {
     setForm((prev) => ({ ...prev, colors: prev.colors.filter((value) => value !== color) }));
   };
 
+  const handleEditProduct = (product: Product) => {
+    setError("");
+    setCreateMessage("");
+    setEditingProductId(product._id);
+    setForm({
+      name: product.name || "",
+      description: product.description || "",
+      price: String(product.price ?? 0),
+      sizePrices: Object.entries(product.sizePrices || {}).reduce<Record<string, string>>((acc, [size, value]) => {
+        acc[size] = String(value);
+        return acc;
+      }, {}),
+      stock: String(product.stock ?? 0),
+      imageUrl: product.images?.[0] || "",
+      sizes: product.sizes || [],
+      colors: product.colors || [],
+      category:
+        typeof product.category === "object" && product.category?._id ? product.category._id : "",
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">My Products</p>
-            <p className="mt-3 text-3xl font-bold text-slate-900">{stats.totalProducts}</p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-slate-400">My Products</p>
+            <p className="mt-2 text-3xl font-black text-gray-900 dark:text-slate-100">{stats.totalProducts}</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Total listed items</p>
           </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Active Deliveries</p>
-            <p className="mt-3 text-3xl font-bold text-amber-600">{stats.activeOrders}</p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-slate-400">Active Deliveries</p>
+            <p className="mt-2 text-3xl font-black text-gray-900 dark:text-slate-100">{stats.activeOrders}</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">Orders in progress</p>
           </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Revenue</p>
-            <p className="mt-3 text-3xl font-bold text-emerald-600">LKR {stats.totalRevenue.toLocaleString()}</p>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Daily Sales</p>
-            <p className="mt-3 text-2xl font-bold text-slate-900">
-              LKR {(sellerAnalytics?.dailySales || 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Monthly Sales</p>
-            <p className="mt-3 text-2xl font-bold text-slate-900">
-              LKR {(sellerAnalytics?.monthlySales || 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Monthly Commission</p>
-            <p className="mt-3 text-2xl font-bold text-amber-600">
-              LKR {(sellerAnalytics?.monthlyCommission || 0).toLocaleString()}
-            </p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-slate-400">Revenue</p>
+            <p className="mt-2 text-3xl font-black text-gray-900 dark:text-slate-100">LKR {stats.totalRevenue.toLocaleString()}</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">From your fulfilled orders</p>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-500">Best-selling Products</h3>
-            <div className="mt-3 space-y-2">
-              {(sellerAnalytics?.bestSellingProducts || []).length === 0 && (
-                <p className="text-sm text-slate-600">No sales yet.</p>
-              )}
-              {(sellerAnalytics?.bestSellingProducts || []).map((item) => (
-                <div key={item.productId} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                  <span className="text-slate-700">{item.name}</span>
-                  <span className="font-semibold text-slate-900">{item.soldQty}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <h3 className="text-sm font-semibold uppercase tracking-widest text-slate-500">Low-stock Alerts</h3>
-            <div className="mt-3 space-y-2">
-              {(sellerAnalytics?.lowStockAlerts || []).length === 0 && (
-                <p className="text-sm text-slate-600">No low stock alerts.</p>
-              )}
-              {(sellerAnalytics?.lowStockAlerts || []).map((item) => (
-                <div key={item.productId} className="flex items-center justify-between rounded-lg bg-rose-50 px-3 py-2 text-sm">
-                  <span className="text-slate-700">{item.name}</span>
-                  <span className="font-semibold text-rose-700">{item.stock}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-
-        <div className="mt-6 flex gap-2">
+        <div className="mt-6 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setActiveTab("products")}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${
-              activeTab === "products" ? "bg-slate-900 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"
+              activeTab === "products" ? "bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900" : "bg-white text-slate-700 ring-1 ring-slate-300 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700"
             }`}
           >
             <Boxes size={16} />
@@ -378,7 +371,7 @@ const SellerManagement = () => {
             type="button"
             onClick={() => setActiveTab("orders")}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${
-              activeTab === "orders" ? "bg-slate-900 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"
+              activeTab === "orders" ? "bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900" : "bg-white text-slate-700 ring-1 ring-slate-300 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700"
             }`}
           >
             <ClipboardList size={16} />
@@ -388,7 +381,7 @@ const SellerManagement = () => {
             type="button"
             onClick={() => setActiveTab("reviews")}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold ${
-              activeTab === "reviews" ? "bg-slate-900 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"
+              activeTab === "reviews" ? "bg-slate-900 text-white dark:bg-slate-200 dark:text-slate-900" : "bg-white text-slate-700 ring-1 ring-slate-300 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700"
             }`}
           >
             <MessageSquareCheck size={16} />
@@ -400,10 +393,12 @@ const SellerManagement = () => {
 
         {activeTab === "products" && (
           <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            <form onSubmit={handleCreateProduct} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <form onSubmit={handleCreateProduct} className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
               <div className="mb-4 flex items-center gap-2">
                 <Plus size={17} className="text-slate-700" />
-                <h2 className="text-lg font-semibold text-slate-900">Add Product</h2>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  {editingProductId ? "Edit Product" : "Add Product"}
+                </h2>
               </div>
               <div className="space-y-3">
                 <input
@@ -419,7 +414,7 @@ const SellerManagement = () => {
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-600"
                   rows={4}
                 />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <input
                     placeholder="Price"
                     type="number"
@@ -462,6 +457,36 @@ const SellerManagement = () => {
                     ))}
                   </div>
                 </div>
+                {form.sizes.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Price by Size (optional)
+                    </p>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {form.sizes.map((size) => (
+                        <div
+                          key={`size-price-${size}`}
+                          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5"
+                        >
+                          <span className="w-10 text-xs font-semibold text-slate-700">{size}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={form.sizePrices[size] ?? ""}
+                            onChange={(e) =>
+                              setForm((prev) => ({
+                                ...prev,
+                                sizePrices: { ...prev.sizePrices, [size]: e.target.value },
+                              }))
+                            }
+                            placeholder={form.price ? `Default ${form.price}` : "Price"}
+                            className="w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-slate-600"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Add Colors</p>
                   <div className="flex gap-2">
@@ -540,17 +565,29 @@ const SellerManagement = () => {
                 )}
               </div>
               {createMessage && <p className="mt-3 text-sm text-green-700">{createMessage}</p>}
-              <button
-                type="submit"
-                disabled={isCreating}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-70"
-              >
-                <Briefcase size={16} />
-                {isCreating ? "Saving..." : "Add Product"}
-              </button>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button
+                  type="submit"
+                  disabled={isCreating}
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-70"
+                >
+                  <Briefcase size={16} />
+                  {isCreating ? "Saving..." : editingProductId ? "Update Product" : "Add Product"}
+                </button>
+                {editingProductId && (
+                  <button
+                    type="button"
+                    onClick={resetProductForm}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    <X size={14} />
+                    Cancel Edit
+                  </button>
+                )}
+              </div>
             </form>
 
-            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 lg:col-span-2">
+            <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700 lg:col-span-2">
               <h2 className="mb-4 text-lg font-semibold text-slate-900">My Product Catalog</h2>
               {loadingProducts && <p className="text-sm text-slate-600">Loading products...</p>}
               {!loadingProducts && products.length === 0 && (
@@ -575,17 +612,35 @@ const SellerManagement = () => {
                         <p className="text-xs text-slate-600">
                           LKR {product.price.toLocaleString()} | Stock: {product.stock}
                         </p>
+                        {product.sizePrices && Object.keys(product.sizePrices).length > 0 && (
+                          <p className="text-[11px] text-slate-500">
+                            Size pricing:{" "}
+                            {Object.entries(product.sizePrices)
+                              .map(([size, price]) => `${size}: LKR ${Number(price).toLocaleString()}`)
+                              .join(" | ")}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      disabled={deletingProductId === product._id}
-                      onClick={() => handleDeleteProduct(product._id)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-70"
-                    >
-                      <Trash2 size={14} />
-                      {deletingProductId === product._id ? "Removing..." : "Remove"}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditProduct(product)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                      >
+                        <Pencil size={14} />
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingProductId === product._id}
+                        onClick={() => handleDeleteProduct(product._id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-70"
+                      >
+                        <Trash2 size={14} />
+                        {deletingProductId === product._id ? "Removing..." : "Remove"}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -594,7 +649,7 @@ const SellerManagement = () => {
         )}
 
         {activeTab === "orders" && (
-          <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">Customer Orders</h2>
             {loadingOrders && <p className="text-sm text-slate-600">Loading orders...</p>}
             {!loadingOrders && orders.length === 0 && (
@@ -653,7 +708,7 @@ const SellerManagement = () => {
         )}
 
         {activeTab === "reviews" && (
-          <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+          <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">Pending Customer Reviews</h2>
             {loadingReviews && <p className="text-sm text-slate-600">Loading pending reviews...</p>}
             {!loadingReviews && pendingReviews.length === 0 && (

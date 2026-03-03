@@ -1,0 +1,26 @@
+[
+  {
+    "_id": { "$oid": "657000000000000000000001" },
+    "name": "Sahan Customer",
+    "email": "customer1@flashtrade.com",
+    "rating": 5,
+    "review": "Great fit and quality. Highly recommended.",
+    "productId": "653000000000000000000001",
+    "isApproved": true,
+    "approvedBy": { "$oid": "652000000000000000000101" },
+    "approvedAt": { "$date": "2026-03-02T12:30:00.000Z" },
+    "createdAt": { "$date": "2026-03-02T11:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "657000000000000000000002" },
+    "name": "Rivani Customer",
+    "email": "customer2@flashtrade.com",
+    "rating": 4,
+    "review": "Sound is good, battery life is decent for the price.",
+    "productId": "653000000000000000000003",
+    "isApproved": false,
+    "approvedBy": null,
+    "approvedAt": null,
+    "createdAt": { "$date": "2026-03-03T06:10:00.000Z" }
+  }
+]

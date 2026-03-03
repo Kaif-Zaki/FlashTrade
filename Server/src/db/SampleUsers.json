@@ -1,0 +1,47 @@
+[
+  {
+    "_id": { "$oid": "652000000000000000000001" },
+    "name": "Platform Admin",
+    "email": "admin@flashtrade.com",
+    "address": "Colombo, Sri Lanka",
+    "password": "Password123",
+    "role": "admin",
+    "sellerApproved": true
+  },
+  {
+    "_id": { "$oid": "652000000000000000000101" },
+    "name": "Kaif Seller",
+    "email": "seller1@flashtrade.com",
+    "address": "Kandy, Sri Lanka",
+    "password": "Password123",
+    "role": "seller",
+    "sellerApproved": true
+  },
+  {
+    "_id": { "$oid": "652000000000000000000102" },
+    "name": "Nimal Seller",
+    "email": "seller2@flashtrade.com",
+    "address": "Galle, Sri Lanka",
+    "password": "Password123",
+    "role": "seller",
+    "sellerApproved": true
+  },
+  {
+    "_id": { "$oid": "652000000000000000000201" },
+    "name": "Sahan Customer",
+    "email": "customer1@flashtrade.com",
+    "address": "Matara, Sri Lanka",
+    "password": "Password123",
+    "role": "customer",
+    "sellerApproved": false
+  },
+  {
+    "_id": { "$oid": "652000000000000000000202" },
+    "name": "Rivani Customer",
+    "email": "customer2@flashtrade.com",
+    "address": "Kurunegala, Sri Lanka",
+    "password": "Password123",
+    "role": "customer",
+    "sellerApproved": false
+  }
+]

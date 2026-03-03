@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 import Order from "../models/Order";
 import Cart from "../models/Cart";
 import { ProductModel } from "../models/Product";
-import { USER_ROLES } from "../constants/roles";
 import { getApplicableCommissionRule } from "../utils/commission";
 
 type HttpError = Error & { status?: number };
@@ -14,11 +13,31 @@ const createHttpError = (status: number, message: string): HttpError => {
   return err;
 };
 
+const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const resolveUnitPrice = (
+  product: { price: number; sizePrices?: Map<string, number> | Record<string, number> },
+  size?: string
+) => {
+  if (!size) return product.price;
+  const sizeKey = size.trim();
+  if (!sizeKey) return product.price;
+
+  if (product.sizePrices instanceof Map) {
+    const byMap = product.sizePrices.get(sizeKey);
+    return Number.isFinite(byMap as number) ? (byMap as number) : product.price;
+  }
+
+  const byRecord = (product.sizePrices as Record<string, number> | undefined)?.[sizeKey];
+  return Number.isFinite(byRecord) ? (byRecord as number) : product.price;
+};
+
 // PLACE ORDER
 export const placeOrder = async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   try {
     const authUserId = (req as any).userId as string | undefined;
+    const authUserRole = req.userRole;
     const { shippingAddress, paymentMethod } = req.body as {
       userId?: string;
       shippingAddress?: string;
@@ -27,6 +46,9 @@ export const placeOrder = async (req: Request, res: Response) => {
 
     if (!authUserId) {
       return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (authUserRole !== "customer") {
+      return res.status(403).json({ message: "Only customers can place orders" });
     }
 
     if (!shippingAddress || !paymentMethod) {
@@ -43,7 +65,7 @@ export const placeOrder = async (req: Request, res: Response) => {
 
       const productIds = Array.from(new Set(cart.items.map((item) => item.product.toString())));
       const products = await ProductModel.find({ _id: { $in: productIds } })
-        .select("_id price stock category seller")
+        .select("_id name price sizePrices stock category seller")
         .session(session);
 
       const productMap = new Map(products.map((product) => [product._id.toString(), product]));
@@ -59,7 +81,7 @@ export const placeOrder = async (req: Request, res: Response) => {
           throw createHttpError(404, `Product not found for id ${productId}`);
         }
 
-        if (item.qty <= 0) {
+        if (!Number.isInteger(item.qty) || item.qty <= 0) {
           throw createHttpError(400, "Invalid cart quantity");
         }
 
@@ -70,15 +92,24 @@ export const placeOrder = async (req: Request, res: Response) => {
         );
 
         if (updated.modifiedCount === 0) {
-          throw createHttpError(400, `Insufficient stock for product ${productId}`);
+          const refreshedProduct = await ProductModel.findById(product._id)
+            .select("name stock")
+            .session(session);
+          const availableStock = refreshedProduct?.stock ?? 0;
+          const productName = refreshedProduct?.name || "Selected product";
+          throw createHttpError(
+            400,
+            `${productName} has only ${availableStock} item(s) left in stock`
+          );
         }
 
-        totalPrice += item.qty * product.price;
+        const unitPrice = roundMoney(resolveUnitPrice(product as any, item.size));
+        const grossItemTotal = roundMoney(item.qty * unitPrice);
+        totalPrice = roundMoney(totalPrice + grossItemTotal);
         const applicableRule = await getApplicableCommissionRule(product.category, item.qty);
         const commissionRate = applicableRule?.ratePercent || 0;
-        const grossItemTotal = item.qty * product.price;
-        const commissionAmount = (grossItemTotal * commissionRate) / 100;
-        const sellerNetAmount = grossItemTotal - commissionAmount;
+        const commissionAmount = roundMoney((grossItemTotal * commissionRate) / 100);
+        const sellerNetAmount = roundMoney(grossItemTotal - commissionAmount);
 
         orderItems.push({
           product: product._id,
@@ -86,7 +117,7 @@ export const placeOrder = async (req: Request, res: Response) => {
           qty: item.qty,
           size: item.size,
           color: item.color,
-          price: product.price,
+          price: unitPrice,
           commissionRate,
           commissionAmount,
           sellerNetAmount,
@@ -293,7 +324,7 @@ export const getSellerAnalytics = async (req: Request, res: Response) => {
       .slice(0, 5);
 
     const lowStockAlerts = sellerProducts
-      .filter((product) => product.stock <= 10)
+      .filter((product) => product.stock <= 5)
       .map((product) => ({
         productId: product._id,
         name: product.name,
@@ -324,7 +355,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       orderStatus: "processing" | "shipped" | "delivered";
     };
 
-    if (!authUserId || !authUserRole) return res.status(401).json({ message: "Unauthorized" });
+    if (!authUserId || authUserRole !== "seller") return res.status(401).json({ message: "Unauthorized" });
     if (!orderStatus) return res.status(400).json({ message: "orderStatus is required" });
 
     const order = await Order.findById(req.params.orderId).populate({
@@ -333,13 +364,11 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     });
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    if (authUserRole === USER_ROLES.SELLER) {
-      const ownsAnyProductInOrder = order.items.some(
-        (item: any) => item.product?.seller?._id?.toString() === authUserId
-      );
-      if (!ownsAnyProductInOrder) {
-        return res.status(403).json({ message: "Forbidden for this order" });
-      }
+    const ownsAnyProductInOrder = order.items.some(
+      (item: any) => item.product?.seller?._id?.toString() === authUserId
+    );
+    if (!ownsAnyProductInOrder) {
+      return res.status(403).json({ message: "Forbidden for this order" });
     }
 
     order.orderStatus = orderStatus;
@@ -361,7 +390,7 @@ export const updateOrderPaymentStatus = async (req: Request, res: Response) => {
       paymentStatus: "pending" | "paid";
     };
 
-    if (!authUserId || !authUserRole) return res.status(401).json({ message: "Unauthorized" });
+    if (!authUserId || authUserRole !== "seller") return res.status(401).json({ message: "Unauthorized" });
     if (!paymentStatus) return res.status(400).json({ message: "paymentStatus is required" });
     if (!["pending", "paid"].includes(paymentStatus)) {
       return res.status(400).json({ message: "paymentStatus must be pending or paid" });
@@ -377,13 +406,11 @@ export const updateOrderPaymentStatus = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Only cash on delivery orders can be updated by seller" });
     }
 
-    if (authUserRole === USER_ROLES.SELLER) {
-      const ownsAnyProductInOrder = order.items.some(
-        (item: any) => item.product?.seller?._id?.toString() === authUserId
-      );
-      if (!ownsAnyProductInOrder) {
-        return res.status(403).json({ message: "Forbidden for this order" });
-      }
+    const ownsAnyProductInOrder = order.items.some(
+      (item: any) => item.product?.seller?._id?.toString() === authUserId
+    );
+    if (!ownsAnyProductInOrder) {
+      return res.status(403).json({ message: "Forbidden for this order" });
     }
 
     order.paymentStatus = paymentStatus;

@@ -1,0 +1,57 @@
+[
+  {
+    "_id": { "$oid": "656000000000000000000001" },
+    "user": { "$oid": "652000000000000000000201" },
+    "items": [
+      {
+        "product": { "$oid": "653000000000000000000001" },
+        "seller": { "$oid": "652000000000000000000101" },
+        "qty": 2,
+        "size": "M",
+        "color": "Blue",
+        "price": 22,
+        "commissionRate": 8,
+        "commissionAmount": 3.52,
+        "sellerNetAmount": 40.48
+      },
+      {
+        "product": { "$oid": "653000000000000000000003" },
+        "seller": { "$oid": "652000000000000000000102" },
+        "qty": 1,
+        "color": "Black",
+        "price": 55,
+        "commissionRate": 12,
+        "commissionAmount": 6.6,
+        "sellerNetAmount": 48.4
+      }
+    ],
+    "totalPrice": 99,
+    "shippingAddress": "No. 10, Main Street, Matara",
+    "paymentMethod": "cash",
+    "paymentStatus": "pending",
+    "orderStatus": "processing",
+    "createdAt": { "$date": "2026-03-01T08:30:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "656000000000000000000002" },
+    "user": { "$oid": "652000000000000000000202" },
+    "items": [
+      {
+        "product": { "$oid": "653000000000000000000008" },
+        "seller": { "$oid": "652000000000000000000102" },
+        "qty": 1,
+        "color": "Silver",
+        "price": 90,
+        "commissionRate": 12,
+        "commissionAmount": 10.8,
+        "sellerNetAmount": 79.2
+      }
+    ],
+    "totalPrice": 90,
+    "shippingAddress": "No. 25, Queen Road, Colombo",
+    "paymentMethod": "online",
+    "paymentStatus": "paid",
+    "orderStatus": "shipped",
+    "createdAt": { "$date": "2026-03-02T10:00:00.000Z" }
+  }
+]

@@ -80,8 +80,13 @@ const CheckoutPayment = () => {
     setForm({ ...form, [name]: value });
   };
 
+  const getUnitPrice = (item: CartResponse["items"][number]) => {
+    const sizePrice = item.size ? item.product.sizePrices?.[item.size] : undefined;
+    return Number.isFinite(sizePrice) ? Number(sizePrice) : item.product.price;
+  };
+
   const subtotal = useMemo(
-    () => cart.items.reduce((sum, item) => sum + item.product.price * item.qty, 0),
+    () => cart.items.reduce((sum, item) => sum + getUnitPrice(item) * item.qty, 0),
     [cart.items]
   );
   const discount = Math.round(subtotal * DISCOUNT_RATE);

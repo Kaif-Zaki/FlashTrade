@@ -4,6 +4,7 @@ type Product  = {
   name: string;
   description: string;
   price: number;
+  sizePrices?: Map<string, number>;
   stock: number;
   images: string[];
   sizes?: string[];
@@ -33,6 +34,11 @@ type Product  = {
     type: Number,
     required: [true, "Book price is required"],
     min: [0, "Book price must be at least 0"],
+  },
+  sizePrices: {
+    type: Map,
+    of: Number,
+    default: {},
   },
   stock: {
     type: Number,

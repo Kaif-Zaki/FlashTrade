@@ -5,7 +5,7 @@ import vexoLogo from "../assets/VexoLogo.png";
 export default function Footer() {
   return (
     <footer className="bg-black text-white border-t border-blue-500">
-      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-12">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-12 sm:px-6 md:grid-cols-4">
         
         {/* Brand */}
         <div className="space-y-4">

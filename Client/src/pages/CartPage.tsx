@@ -21,6 +21,10 @@ const ShoppingCart = () => {
 
   const getItemKey = (productId: string, size?: string, color?: string) =>
     `${productId}__${size || ""}__${color || ""}`;
+  const getUnitPrice = (item: CartResponse["items"][number]) => {
+    const sizePrice = item.size ? item.product.sizePrices?.[item.size] : undefined;
+    return Number.isFinite(sizePrice) ? Number(sizePrice) : item.product.price;
+  };
 
   const loadCart = async () => {
     const data = await getCartRequest();
@@ -114,7 +118,7 @@ const ShoppingCart = () => {
   };
 
   const subtotal = useMemo(
-    () => cart.items.reduce((sum, item) => sum + item.product.price * item.qty, 0),
+    () => cart.items.reduce((sum, item) => sum + getUnitPrice(item) * item.qty, 0),
     [cart.items]
   );
   const discount = Math.round(subtotal * DISCOUNT_RATE);
@@ -171,6 +175,7 @@ const ShoppingCart = () => {
                           </h3>
                           <p className="text-sm text-gray-500 mt-1">Size: {item.size || "-"}</p>
                           <p className="text-sm text-gray-500">Colour: {item.color || "-"}</p>
+                          <p className="text-xs text-gray-500">Available stock: {item.product.stock}</p>
                         </div>
                         <button
                           onClick={() => removeItem(item.product._id, item.size, item.color)}
@@ -183,7 +188,7 @@ const ShoppingCart = () => {
 
                       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <span className="text-base font-bold tracking-wide text-gray-900">
-                          LKR {(item.product.price * item.qty).toLocaleString()}
+                          LKR {(getUnitPrice(item) * item.qty).toLocaleString()}
                         </span>
                         <div className="flex items-center gap-3 bg-white rounded-xl px-3 py-1.5 shadow-sm">
                           <button
@@ -196,7 +201,7 @@ const ShoppingCart = () => {
                           <span className="text-sm font-bold w-4 text-center text-gray-900">{item.qty}</span>
                           <button
                             onClick={() => updateQty(item.product._id, item.qty, item.qty + 1, item.size, item.color)}
-                            disabled={busyItemKey === itemKey}
+                            disabled={busyItemKey === itemKey || item.qty >= item.product.stock}
                             className="text-gray-700 font-bold text-lg leading-none hover:text-green-600 transition-colors w-5 text-center disabled:opacity-60"
                           >
                             +

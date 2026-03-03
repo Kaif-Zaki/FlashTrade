@@ -49,6 +49,7 @@ export const signUp = async (
       password: hashedPassword,
       role: normalizedRole,
       sellerApproved: normalizedRole !== USER_ROLES.SELLER,
+      sellerActive: normalizedRole !== USER_ROLES.SELLER,
     });
     await user.save();
 
@@ -62,6 +63,7 @@ export const signUp = async (
       address: user.address,
       role: user.role,
       sellerApproved: user.sellerApproved,
+      sellerActive: user.sellerActive,
     };
     res.status(201).json(userWithoutPassword);
   } catch (error: any) {
@@ -128,6 +130,7 @@ export const login = async (
       address: user.address,
       role: user.role,
       sellerApproved: user.sellerApproved,
+      sellerActive: user.sellerActive,
       accessToken,
     };
 
@@ -417,6 +420,7 @@ export const bootstrapAdmin = async (
     if (existingUser) {
       existingUser.role = USER_ROLES.ADMIN;
       existingUser.sellerApproved = true;
+      existingUser.sellerActive = true;
       if (password) {
         existingUser.password = await bcrypt.hash(password, 10);
       }
@@ -431,6 +435,7 @@ export const bootstrapAdmin = async (
           address: existingUser.address,
           role: existingUser.role,
           sellerApproved: existingUser.sellerApproved,
+          sellerActive: existingUser.sellerActive,
         },
       });
     }
@@ -447,6 +452,7 @@ export const bootstrapAdmin = async (
       password: hashedPassword,
       role: USER_ROLES.ADMIN,
       sellerApproved: true,
+      sellerActive: true,
     });
 
     return res.status(201).json({
@@ -458,6 +464,7 @@ export const bootstrapAdmin = async (
         address: adminUser.address,
         role: adminUser.role,
         sellerApproved: adminUser.sellerApproved,
+        sellerActive: adminUser.sellerActive,
       },
     });
   } catch (error) {
@@ -495,6 +502,7 @@ export const createAdmin = async (
       password: hashedPassword,
       role: USER_ROLES.ADMIN,
       sellerApproved: true,
+      sellerActive: true,
     });
 
     res.status(201).json({
@@ -506,6 +514,7 @@ export const createAdmin = async (
         address: adminUser.address,
         role: adminUser.role,
         sellerApproved: adminUser.sellerApproved,
+        sellerActive: adminUser.sellerActive,
       },
     });
   } catch (error) {
@@ -530,6 +539,7 @@ export const promoteUserToAdmin = async (
 
     user.role = USER_ROLES.ADMIN;
     user.sellerApproved = true;
+    user.sellerActive = true;
     await user.save();
 
     res.status(200).json({
@@ -541,6 +551,7 @@ export const promoteUserToAdmin = async (
         address: user.address,
         role: user.role,
         sellerApproved: user.sellerApproved,
+        sellerActive: user.sellerActive,
       },
     });
   } catch (error) {
@@ -584,6 +595,7 @@ export const approveSeller = async (
     }
 
     user.sellerApproved = true;
+    user.sellerActive = true;
     await user.save();
 
     res.status(200).json({
@@ -595,6 +607,7 @@ export const approveSeller = async (
         address: user.address,
         role: user.role,
         sellerApproved: user.sellerApproved,
+        sellerActive: user.sellerActive,
       },
     });
   } catch (error) {
@@ -614,6 +627,81 @@ export const getApprovedSellers = async (
     }).select("-password");
 
     res.status(200).json(approvedSellers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateSellerActiveStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : req.params.userId;
+    const { sellerActive } = req.body as { sellerActive?: boolean };
+
+    if (typeof sellerActive !== "boolean") {
+      throw new ApiError(400, "sellerActive must be true or false");
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "Seller not found");
+    }
+    if (user.role !== USER_ROLES.SELLER) {
+      throw new ApiError(400, "User is not a seller");
+    }
+    if (!user.sellerApproved) {
+      throw new ApiError(400, "Seller is not approved yet");
+    }
+
+    user.sellerActive = sellerActive;
+    await user.save();
+
+    res.status(200).json({
+      message: sellerActive ? "Seller activated successfully" : "Seller deactivated successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        address: user.address,
+        role: user.role,
+        sellerApproved: user.sellerApproved,
+        sellerActive: user.sellerActive,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSellerById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : req.params.userId;
+
+    const seller = await UserModel.findById(userId).select("-password");
+    if (!seller) {
+      throw new ApiError(404, "Seller not found");
+    }
+    if (seller.role !== USER_ROLES.SELLER) {
+      throw new ApiError(400, "User is not a seller");
+    }
+
+    const totalProducts = await ProductModel.countDocuments({ seller: seller._id });
+
+    res.status(200).json({
+      seller,
+      totalProducts,
+    });
   } catch (error) {
     next(error);
   }

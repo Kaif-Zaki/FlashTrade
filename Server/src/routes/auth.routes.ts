@@ -16,7 +16,9 @@ import {
   getPendingSellers,
   approveSeller,
   getApprovedSellers,
+  getSellerById,
   removeSeller,
+  updateSellerActiveStatus,
 } from "../controllers/auth.controller";
 
 import { authenticateToken } from "../middlewares/authenticateToken";
@@ -71,6 +73,18 @@ authRouter.get(
   authenticateToken,
   authorizeRoles(USER_ROLES.ADMIN),
   getApprovedSellers
+);
+authRouter.get(
+  "/sellers/:userId",
+  authenticateToken,
+  authorizeRoles(USER_ROLES.ADMIN),
+  getSellerById
+);
+authRouter.patch(
+  "/sellers/:userId/status",
+  authenticateToken,
+  authorizeRoles(USER_ROLES.ADMIN),
+  updateSellerActiveStatus
 );
 authRouter.delete(
   "/sellers/:userId",

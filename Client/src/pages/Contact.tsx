@@ -259,15 +259,23 @@ const ContactPage = () => {
         </div>
 
         {/* Bottom FAQ Strip */}
-        <div className="mt-6 bg-gray-900 text-white rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold mb-0.5">Looking for quick answers?</p>
-            <p className="text-xs text-gray-400">Check our FAQ page for instant help on orders, returns & shipping.</p>
+        <div className="mt-6 rounded-2xl bg-gray-900 p-6 text-white">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="mb-0.5 text-sm font-bold">Looking for quick answers?</p>
+              <p className="text-xs text-gray-400">
+                Check our FAQ page for instant help on orders, returns and shipping.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate("/faqs")}
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-gray-900 transition-colors duration-200 hover:bg-gray-200 sm:w-auto"
+            >
+              View FAQs
+              <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+            </button>
           </div>
-          <button className="flex items-center gap-2 bg-white text-gray-900 px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gray-200 transition-colors duration-200 whitespace-nowrap group">
-            View FAQ
-            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform duration-200" />
-          </button>
         </div>
       </div>
     </div>
