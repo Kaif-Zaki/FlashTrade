@@ -11,6 +11,7 @@ import {
   updateSellerActiveStatusRequest,
 } from "../service/adminService";
 import type { AuthUser } from "../service/authService";
+import LoadingAnimation from "../components/Loading";
 
 const AdminManagement = () => {
   const [name, setName] = useState("");
@@ -248,7 +249,13 @@ const AdminManagement = () => {
             </div>
 
             {sellerError && <p className="mb-3 text-sm text-red-600">{sellerError}</p>}
-            {isLoadingSellers && <p className="text-sm text-slate-600">Loading pending sellers...</p>}
+            {isLoadingSellers && (
+              <LoadingAnimation
+                fullScreen={false}
+                title="Loading Sellers"
+                subtitle="Checking pending and approved seller accounts..."
+              />
+            )}
 
             {!isLoadingSellers && pendingSellers.length === 0 && (
               <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">

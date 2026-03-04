@@ -11,7 +11,12 @@ export const sendContactEmail = async (req: Request, res: Response) => {
       message?: string;
     };
 
-    if (!name?.trim() || !email?.trim() || !subject?.trim() || !message?.trim()) {
+    if (
+      !name?.trim() ||
+      !email?.trim() ||
+      !subject?.trim() ||
+      !message?.trim()
+    ) {
       return res.status(400).json({
         message: "Name, email, subject, and message are required",
       });
@@ -45,7 +50,8 @@ export const sendContactEmail = async (req: Request, res: Response) => {
     if (err?.code === "EAUTH") {
       message = "Email authentication failed. Check EMAIL_USER and EMAIL_PASS";
     } else if (err?.code === "EDNS" || err?.code === "ENOTFOUND") {
-      message = "Unable to reach Gmail SMTP server. Check internet/DNS on backend";
+      message =
+        "Unable to reach Gmail SMTP server. Check internet/DNS on backend";
     } else if (typeof err?.message === "string" && err.message.trim()) {
       message = err.message;
     }

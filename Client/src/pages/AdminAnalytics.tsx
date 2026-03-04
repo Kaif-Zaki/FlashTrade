@@ -11,6 +11,7 @@ import {
 } from "../service/adminService";
 import { getProductsRequest } from "../service/productService";
 import type { Product } from "../types/Product";
+import LoadingAnimation from "../components/Loading";
 
 const AdminAnalytics = () => {
   const [users, setUsers] = useState<{ role: string }[]>([]);
@@ -52,6 +53,15 @@ const AdminAnalytics = () => {
 
     loadDashboard();
   }, []);
+
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Admin Analytics"
+        subtitle="Gathering platform-wide users, orders, revenue, and commission insights..."
+      />
+    );
+  }
 
   const analytics = useMemo(() => {
     const totalUsers = users.length;
@@ -184,11 +194,8 @@ const AdminAnalytics = () => {
        
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        {isLoading && <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Loading analytics...</p>}
-
-        {!isLoading && (
-          <>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <MetricCard title="Total Users" value={analytics.totalUsers} icon={<Users size={17} />} tone="sky" />
               <MetricCard title="Total Products" value={products.length} icon={<Boxes size={17} />} tone="indigo" />
               <MetricCard title="Total Orders" value={analytics.totalOrders} icon={<ShoppingBag size={17} />} tone="emerald" />
@@ -297,7 +304,7 @@ const AdminAnalytics = () => {
               </section>
             </div>
 
-            <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+          <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Transaction Integrity Check
               </h2>
@@ -376,9 +383,8 @@ const AdminAnalytics = () => {
                   );
                 })}
               </div>
-            </section>
-          </>
-        )}
+          </section>
+        </>
       </div>
     </div>
   );

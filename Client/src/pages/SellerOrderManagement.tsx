@@ -8,6 +8,7 @@ import {
   type SellerPaymentStatus,
   type SellerOrderStatus,
 } from "../service/sellerService";
+import LoadingAnimation from "../components/Loading";
 
 const SellerOrderManagement = () => {
   const [orders, setOrders] = useState<SellerOrder[]>([]);
@@ -34,6 +35,15 @@ const SellerOrderManagement = () => {
   useEffect(() => {
     loadOrders();
   }, []);
+
+  if (loadingOrders) {
+    return (
+      <LoadingAnimation
+        title="Loading Seller Orders"
+        subtitle="Fetching customer orders and payment statuses..."
+      />
+    );
+  }
 
   const handleStatusChange = async (orderId: string, status: SellerOrderStatus) => {
     setSavingOrderId(orderId);
@@ -96,8 +106,7 @@ const SellerOrderManagement = () => {
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
         <section className="mt-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
-          {loadingOrders && <p className="text-sm text-slate-600 dark:text-slate-300">Loading orders...</p>}
-          {!loadingOrders && orders.length === 0 && (
+          {orders.length === 0 && (
             <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               No customer orders assigned to your products yet.
             </p>

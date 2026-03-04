@@ -5,6 +5,7 @@ import {
   getPendingSellerReviewsRequest,
   type SellerPendingReview,
 } from "../service/sellerService";
+import LoadingAnimation from "../components/Loading";
 
 const SellerReviewManagement = () => {
   const [pendingReviews, setPendingReviews] = useState<SellerPendingReview[]>([]);
@@ -32,6 +33,15 @@ const SellerReviewManagement = () => {
     loadPendingReviews();
   }, []);
 
+  if (loadingReviews) {
+    return (
+      <LoadingAnimation
+        title="Loading Reviews"
+        subtitle="Fetching customer reviews waiting for approval..."
+      />
+    );
+  }
+
   const handleApproveReview = async (reviewId: string) => {
     setApprovingReviewId(reviewId);
     setError("");
@@ -58,8 +68,7 @@ const SellerReviewManagement = () => {
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
         <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
-          {loadingReviews && <p className="text-sm text-slate-600 dark:text-slate-300">Loading pending reviews...</p>}
-          {!loadingReviews && pendingReviews.length === 0 && (
+          {pendingReviews.length === 0 && (
             <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
               No reviews waiting for your approval.
             </p>

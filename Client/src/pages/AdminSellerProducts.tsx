@@ -9,6 +9,7 @@ import {
 } from "../service/adminService";
 import type { AuthUser } from "../service/authService";
 import type { Product } from "../types/Product";
+import LoadingAnimation from "../components/Loading";
 
 const AdminSellerProducts = () => {
   const { sellerId = "" } = useParams();
@@ -43,6 +44,15 @@ const AdminSellerProducts = () => {
   useEffect(() => {
     loadSellerData();
   }, [sellerId]);
+
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Seller Products"
+        subtitle="Preparing seller profile and product catalog..."
+      />
+    );
+  }
 
   const handleRemoveProduct = async (productId: string) => {
     setRemovingProductId(productId);
@@ -92,15 +102,14 @@ const AdminSellerProducts = () => {
         </div>
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        {isLoading && <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Loading seller products...</p>}
 
-        {!isLoading && products.length === 0 && (
+        {products.length === 0 && (
           <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-900">
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No products found for this seller</p>
           </div>
         )}
 
-        {!isLoading && products.length > 0 && (
+        {products.length > 0 && (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {products.map((product) => (
               <article

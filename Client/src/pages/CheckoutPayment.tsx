@@ -6,6 +6,7 @@ import { getCartRequest } from "../service/cartService";
 import { placeOrderRequest } from "../service/orderService";
 import type { CartResponse } from "../types/Cart";
 import type { CheckoutDraft } from "../types/Order";
+import LoadingAnimation from "../components/Loading";
 
 const STORAGE_KEY = "checkout_draft";
 const DISCOUNT_RATE = 0.2;
@@ -140,6 +141,15 @@ const CheckoutPayment = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Payment"
+        subtitle="Preparing secure payment details and order summary..."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-4xl">
@@ -232,26 +242,24 @@ const CheckoutPayment = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-300">Subtotal</span>
                     <span className="text-sm font-semibold">
-                      {isLoading ? "..." : `LKR ${subtotal.toLocaleString()}`}
+                      {`LKR ${subtotal.toLocaleString()}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-300">Discount (-20%)</span>
                     <span className="text-sm font-semibold text-red-400">
-                      {isLoading ? "..." : `LKR -${discount.toLocaleString()}`}
+                      {`LKR -${discount.toLocaleString()}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-300">Delivery Fee</span>
                     <span className="text-sm font-semibold">
-                      {isLoading
-                        ? "..."
-                        : `LKR ${(cart.items.length > 0 ? DELIVERY_FEE : 0).toLocaleString()}`}
+                      {`LKR ${(cart.items.length > 0 ? DELIVERY_FEE : 0).toLocaleString()}`}
                     </span>
                   </div>
                   <div className="border-t border-gray-700 pt-4 flex items-center justify-between">
                     <span className="font-bold text-white">Total</span>
-                    <span className="font-bold text-white">{isLoading ? "..." : `LKR ${total.toLocaleString()}`}</span>
+                    <span className="font-bold text-white">{`LKR ${total.toLocaleString()}`}</span>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, ShoppingCart, User } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth.ts";
 import { getCartRequest } from "../service/cartService.ts";
@@ -22,6 +22,7 @@ export default function Navbar() {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const matchedProducts = useMemo(() => {
@@ -84,6 +85,11 @@ export default function Navbar() {
     };
   }, [isLoggedIn, location.pathname, location.search]);
 
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setShowSuggestions(false);
+  }, [location.pathname, location.search]);
+
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const query = searchTerm.trim();
@@ -135,8 +141,122 @@ export default function Navbar() {
 
   return (
     <header className="w-full bg-[#f5f5f3] dark:bg-slate-900">
+      <div className="px-4 py-3 sm:px-6 lg:hidden">
+        <div className="flex flex-col gap-3">
+          <Link to="/" className="flex items-center">
+            <img src={vexoLogo} alt="Vexo" className="h-8 w-auto" />
+          </Link>
+
+          <div className="flex w-full items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white p-2 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              {isLoggedIn && userRole === "customer" && (
+                <Link
+                  to="/cart"
+                  className="relative inline-flex items-center text-slate-800 dark:text-slate-200"
+                  aria-label="Cart"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  {cartCount > 0 && (
+                    <span className="absolute -right-2 -top-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-black px-1 text-[9px] font-bold text-white">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              )}
+
+              {isLoggedIn && (
+                <Link
+                  to="/private-details"
+                  aria-label="Private Details"
+                  className="inline-flex items-center text-slate-800 dark:text-slate-200"
+                >
+                  <User className="h-5 w-5" />
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <form onSubmit={handleSearchSubmit}>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-10 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-slate-100"
+            />
+            <button type="submit" className="absolute right-4 top-2.5 text-gray-500 dark:text-slate-300">
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[70] lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/45"
+            aria-label="Close menu overlay"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          <aside className="absolute right-0 top-0 h-full w-[82%] max-w-xs overflow-y-auto bg-white p-5 shadow-xl dark:bg-slate-900">
+            <div className="mb-5 flex items-center justify-between">
+              <img src={vexoLogo} alt="Vexo" className="h-8 w-auto" />
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="rounded-lg border border-slate-300 p-2 text-slate-800 dark:border-slate-700 dark:text-slate-100"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <nav className="space-y-1">
+              <MobileNavLink to="/" label="Home" onNavigate={() => setIsMobileMenuOpen(false)} />
+              <MobileNavLink to="/products" label="All Category" onNavigate={() => setIsMobileMenuOpen(false)} />
+              <MobileNavLink to={menLink} label="Men" onNavigate={() => setIsMobileMenuOpen(false)} />
+              <MobileNavLink to={womenLink} label="Women" onNavigate={() => setIsMobileMenuOpen(false)} />
+              <MobileNavLink to={electronicsLink} label="Electronics" onNavigate={() => setIsMobileMenuOpen(false)} />
+              <MobileNavLink to={sneakersLink} label="Sneakers" onNavigate={() => setIsMobileMenuOpen(false)} />
+              <MobileNavLink to="/contact" label="Contact Us" onNavigate={() => setIsMobileMenuOpen(false)} />
+              {isLoggedIn && userRole === "customer" && (
+                <MobileNavLink to="/orders" label="Order History" onNavigate={() => setIsMobileMenuOpen(false)} />
+              )}
+            </nav>
+
+            <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
+              {isLoggedIn ? (
+                <div className="space-y-2">
+                  {userRole === "customer" && (
+                    <MobileNavLink to="/cart" label={`Cart (${cartCount})`} onNavigate={() => setIsMobileMenuOpen(false)} />
+                  )}
+                  <MobileNavLink to="/private-details" label="Private Details" onNavigate={() => setIsMobileMenuOpen(false)} />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <MobileNavLink to="/login" label="Login" onNavigate={() => setIsMobileMenuOpen(false)} />
+                  <MobileNavLink to="/signup" label="Signup" onNavigate={() => setIsMobileMenuOpen(false)} />
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* TOP BAR */}
-      <div className="flex flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-10 lg:py-4">
+      <div className="hidden flex-col gap-3 px-4 py-3 sm:px-6 lg:flex lg:flex-row lg:items-center lg:justify-between lg:px-10 lg:py-4">
         {/* LOGO */}
         <Link to="/" className="flex items-center">
           <img src={vexoLogo} alt="Vexo" className="h-8 w-auto sm:h-9" />
@@ -237,7 +357,7 @@ export default function Navbar() {
       </div>
 
       {/* BOTTOM NAV */}
-      <nav className="no-scrollbar overflow-x-auto px-4 pb-3 pt-2 sm:px-6 lg:px-10 lg:py-4">
+      <nav className="no-scrollbar hidden overflow-x-auto px-4 pb-3 pt-2 sm:px-6 lg:block lg:px-10 lg:py-4">
         <div className="flex w-max min-w-full items-center justify-start gap-6 text-xs font-medium uppercase tracking-wide sm:justify-center sm:gap-8 sm:text-sm lg:gap-10">
           <Link to="/">
             <NavItem text="Home" active={location.pathname === "/"} />
@@ -298,6 +418,26 @@ export default function Navbar() {
         </div>
       </nav>
     </header>
+  );
+}
+
+function MobileNavLink({
+  to,
+  label,
+  onNavigate,
+}: {
+  to: string;
+  label: string;
+  onNavigate: () => void;
+}) {
+  return (
+    <Link
+      to={to}
+      onClick={onNavigate}
+      className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800"
+    >
+      {label}
+    </Link>
   );
 }
 

@@ -3,6 +3,7 @@ import { AxiosError } from "axios";
 import { getUserOrdersRequest } from "../service/orderService";
 import type { Order, OrderItem } from "../types/Order";
 import type { Product } from "../types/Product";
+import LoadingAnimation from "../components/Loading";
 
 const getItemName = (item: OrderItem) => {
   if (typeof item.product === "string") return item.product;
@@ -43,18 +44,26 @@ const OrderHistory = () => {
     };
   }, []);
 
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Orders"
+        subtitle="Retrieving your order history and status updates..."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-8">
       <div className="mx-auto max-w-5xl">
         <h1 className="mb-6 text-2xl font-bold text-gray-900">Order History</h1>
 
-        {isLoading && <p className="text-sm text-gray-600">Loading orders...</p>}
-        {!isLoading && error && <p className="text-sm text-red-600">{error}</p>}
-        {!isLoading && !error && orders.length === 0 && (
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        {!error && orders.length === 0 && (
           <p className="text-sm text-gray-600">No orders yet.</p>
         )}
 
-        {!isLoading && !error && orders.length > 0 && (
+        {!error && orders.length > 0 && (
           <div className="space-y-4">
             {orders.map((order) => (
               <div key={order._id} className="rounded-2xl bg-white p-5 shadow-sm">

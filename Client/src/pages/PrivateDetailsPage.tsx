@@ -6,6 +6,7 @@ import {
   type AuthUser,
 } from "../service/authService.ts";
 import { useAuth } from "../context/useAuth.ts";
+import LoadingAnimation from "../components/Loading";
 
 const PrivateDetailsPage = () => {
   const { logout } = useAuth();
@@ -83,6 +84,15 @@ const PrivateDetailsPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Profile"
+        subtitle="Fetching your account and private details..."
+      />
+    );
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -99,9 +109,8 @@ const PrivateDetailsPage = () => {
           {isLoggingOut ? "Logging out..." : "Logout"}
         </button>
       </div>
-      {isLoading && <p className="mt-3 text-gray-600">Loading profile...</p>}
-      {!isLoading && error && <p className="mt-3 text-red-600">{error}</p>}
-      {!isLoading && profile && (
+      {error && <p className="mt-3 text-red-600">{error}</p>}
+      {profile && (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div className="rounded-xl border bg-white p-5 shadow-sm space-y-3">
             <p>

@@ -18,6 +18,7 @@ import {
   type SellerOrderStatus,
   type SellerPendingReview,
 } from "../service/sellerService";
+import LoadingAnimation from "../components/Loading";
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "38", "39", "40", "41", "42", "43"];
 
@@ -592,7 +593,13 @@ const SellerManagement = () => {
 
             <section className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700 lg:col-span-2 lg:max-h-[calc(100vh-7rem)]">
               <h2 className="mb-4 text-lg font-semibold text-slate-900">My Product Catalog</h2>
-              {loadingProducts && <p className="text-sm text-slate-600">Loading products...</p>}
+              {loadingProducts && (
+                <LoadingAnimation
+                  fullScreen={false}
+                  title="Loading Products"
+                  subtitle="Syncing your seller catalog..."
+                />
+              )}
               {!loadingProducts && products.length === 0 && (
                 <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
                   No products yet. Add your first product from the form.
@@ -660,7 +667,13 @@ const SellerManagement = () => {
         {activeTab === "orders" && (
           <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">Customer Orders</h2>
-            {loadingOrders && <p className="text-sm text-slate-600">Loading orders...</p>}
+            {loadingOrders && (
+              <LoadingAnimation
+                fullScreen={false}
+                title="Loading Orders"
+                subtitle="Fetching order pipeline updates..."
+              />
+            )}
             {!loadingOrders && orders.length === 0 && (
               <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
                 No customer orders assigned to your products yet.
@@ -719,7 +732,13 @@ const SellerManagement = () => {
         {activeTab === "reviews" && (
           <section className="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">Pending Customer Reviews</h2>
-            {loadingReviews && <p className="text-sm text-slate-600">Loading pending reviews...</p>}
+            {loadingReviews && (
+              <LoadingAnimation
+                fullScreen={false}
+                title="Loading Reviews"
+                subtitle="Getting reviews waiting for approval..."
+              />
+            )}
             {!loadingReviews && pendingReviews.length === 0 && (
               <p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
                 No reviews waiting for your approval.

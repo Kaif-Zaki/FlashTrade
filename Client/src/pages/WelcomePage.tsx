@@ -6,6 +6,7 @@ import { getCategoriesRequest } from "../service/categoryService";
 import type { Product } from "../types/Product";
 import type { Category } from "../types/Category";
 import allCategoryImage from "../assets/AllCategory.avif";
+import LoadingAnimation from "../components/Loading";
 
 interface DisplayCategory {
   _id: string;
@@ -93,6 +94,15 @@ export default function WelcomePage() {
     if (!id) return;
     navigate(`/products/${id}`);
   };
+
+  if (isLoadingProducts && isLoadingCategories && products.length === 0 && categories.length === 0) {
+    return (
+      <LoadingAnimation
+        title="Loading Storefront"
+        subtitle="Preparing categories, products, and featured highlights..."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f5f3]">
@@ -197,7 +207,11 @@ export default function WelcomePage() {
           </div>
 
           {isLoadingCategories && (
-            <p className="text-sm text-gray-600">Loading categories...</p>
+            <LoadingAnimation
+              fullScreen={false}
+              title="Loading Categories"
+              subtitle="Preparing your category collection..."
+            />
           )}
           {!isLoadingCategories && categoriesError && (
             <p className="text-sm text-red-600">{categoriesError}</p>
@@ -252,7 +266,11 @@ export default function WelcomePage() {
           </div>
 
           {isLoadingProducts && (
-            <p className="text-sm text-gray-600">Loading products...</p>
+            <LoadingAnimation
+              fullScreen={false}
+              title="Loading Products"
+              subtitle="Fetching the latest arrivals..."
+            />
           )}
           {!isLoadingProducts && productsError && (
             <p className="text-sm text-red-600">{productsError}</p>

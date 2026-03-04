@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { AxiosError } from "axios";
 import { getProductsRequest } from "../service/productService.ts";
 import type { Product } from "../types/Product";
+import LoadingAnimation from "../components/Loading";
 
 const ProductList = () => {
   const navigate = useNavigate();
@@ -175,6 +176,15 @@ const ProductList = () => {
     return "";
   }, [allCategories, categoryId, filter]);
 
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Products"
+        subtitle="Getting the latest catalog and filters ready..."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-8">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
@@ -282,9 +292,8 @@ const ProductList = () => {
             </button>
           </div>
 
-          {isLoading && <p className="text-sm text-gray-600">Loading products...</p>}
-          {!isLoading && error && <p className="text-sm text-red-600">{error}</p>}
-          {!isLoading && !error && filteredProducts.length === 0 && (
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {!error && filteredProducts.length === 0 && (
             <p className="text-sm text-gray-600">
               {categoryId || filter
                 ? `${emptyCategoryLabel} category item not available.`
@@ -292,7 +301,7 @@ const ProductList = () => {
             </p>
           )}
 
-          {!isLoading && !error && filteredProducts.length > 0 && (
+          {!error && filteredProducts.length > 0 && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
               {filteredProducts.map((product) => (
                 <button

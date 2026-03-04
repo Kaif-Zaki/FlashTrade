@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AxiosError } from "axios";
 import { BarChart3, Boxes, TrendingUp, Wallet } from "lucide-react";
 import { getSellerAnalyticsRequest, type SellerAnalytics } from "../service/sellerService";
+import LoadingAnimation from "../components/Loading";
 
 const SellerAnalyticsPage = () => {
   const [analytics, setAnalytics] = useState<SellerAnalytics | null>(null);
@@ -30,15 +31,22 @@ const SellerAnalyticsPage = () => {
     loadAnalytics();
   }, []);
 
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Seller Analytics"
+        subtitle="Preparing your sales, earnings, commission, and product insights..."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
        
 
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        {isLoading && <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">Loading analytics...</p>}
-
-        {!isLoading && analytics && (
+        {analytics && (
           <>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <MetricCard

@@ -8,6 +8,7 @@ import {
   removeFromCartRequest,
 } from "../service/cartService";
 import type { CartResponse } from "../types/Cart";
+import LoadingAnimation from "../components/Loading";
 
 const DISCOUNT_RATE = 0.2;
 const DELIVERY_FEE = 15;
@@ -142,9 +143,11 @@ const ShoppingCart = () => {
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex-1 bg-gray-200 rounded-2xl p-5 shadow-sm">
             {isLoading ? (
-              <div className="text-center py-16 text-gray-500">
-                <p className="text-lg font-semibold">Loading cart...</p>
-              </div>
+              <LoadingAnimation
+                fullScreen={false}
+                title="Loading Cart"
+                subtitle="Syncing your selected items..."
+              />
             ) : cart.items.length === 0 ? (
               <div className="text-center py-16 text-gray-500">
                 <p className="text-lg font-semibold">Your cart is empty</p>

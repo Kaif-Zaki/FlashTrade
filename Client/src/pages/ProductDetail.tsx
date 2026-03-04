@@ -9,6 +9,7 @@ import { addToCartRequest } from "../service/cartService.ts";
 import { createReviewRequest, getReviewsRequest } from "../service/reviewService.ts";
 import type { Review } from "../types/Review";
 import { useAuth } from "../context/useAuth.ts";
+import LoadingAnimation from "../components/Loading";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -220,6 +221,15 @@ const ProductDetail = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Product"
+        subtitle="Fetching product details, options, and pricing..."
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-6 sm:py-8">
       <div className="mx-auto max-w-6xl">
@@ -230,10 +240,9 @@ const ProductDetail = () => {
           <ArrowLeft size={17} />
         </button>
 
-        {isLoading && <p className="text-sm text-gray-600">Loading product...</p>}
-        {!isLoading && error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
-        {!isLoading && !error && product && (
+        {!error && product && (
           <div className="space-y-5">
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-[420px_minmax(0,1fr)]">
               <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -353,7 +362,13 @@ const ProductDetail = () => {
             <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
                 <h2 className="mb-4 text-xl font-bold text-gray-900">Customer Reviews</h2>
-                {isReviewsLoading && <p className="text-sm text-gray-600">Loading reviews...</p>}
+                {isReviewsLoading && (
+                  <LoadingAnimation
+                    fullScreen={false}
+                    title="Loading Reviews"
+                    subtitle="Fetching customer feedback..."
+                  />
+                )}
                 {!isReviewsLoading && reviewError && <p className="text-sm text-red-600">{reviewError}</p>}
                 {!isReviewsLoading && !reviewError && reviews.length === 0 && (
                   <p className="text-sm text-gray-600">No reviews yet for this product.</p>
@@ -434,7 +449,13 @@ const ProductDetail = () => {
 
             <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm sm:p-6">
               <h2 className="mb-4 text-xl font-bold text-gray-900">You may like this</h2>
-              {isRelatedLoading && <p className="text-sm text-gray-600">Loading similar products...</p>}
+              {isRelatedLoading && (
+                <LoadingAnimation
+                  fullScreen={false}
+                  title="Loading Similar Products"
+                  subtitle="Finding related items you may like..."
+                />
+              )}
               {!isRelatedLoading && relatedProducts.length === 0 && (
                 <p className="text-sm text-gray-600">No more products in this category yet.</p>
               )}
