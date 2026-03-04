@@ -30,7 +30,7 @@ const LoadingAnimation = ({
 }: LoadingAnimationProps) => {
   return (
     <div
-      className={`relative overflow-hidden bg-gradient-to-br from-slate-100 via-white to-sky-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 ${
+      className={`relative overflow-hidden bg-linear-to-br from-slate-100 via-white to-sky-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 ${
         fullScreen ? "min-h-screen" : "min-h-[60vh] rounded-3xl"
       }`}
     >
@@ -51,7 +51,7 @@ const LoadingAnimation = ({
               <span
                 key={`loader-bar-${height}-${index}`}
                 style={barDelays[index]}
-                className={`w-2 ${height} animate-bounce rounded-full bg-gradient-to-t from-sky-500 to-indigo-500`}
+                className={`w-2 ${height} animate-bounce rounded-full bg-linear-to-t from-sky-500 to-indigo-500`}
               />
             ))}
           </div>
