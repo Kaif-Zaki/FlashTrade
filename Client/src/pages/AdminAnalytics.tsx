@@ -54,15 +54,6 @@ const AdminAnalytics = () => {
     loadDashboard();
   }, []);
 
-  if (isLoading) {
-    return (
-      <LoadingAnimation
-        title="Loading Admin Analytics"
-        subtitle="Gathering platform-wide users, orders, revenue, and commission insights..."
-      />
-    );
-  }
-
   const analytics = useMemo(() => {
     const totalUsers = users.length;
     const totalCustomers = users.filter((user) => user.role === "customer").length;
@@ -187,6 +178,15 @@ const AdminAnalytics = () => {
       transactionAudit,
     };
   }, [orders, products, users]);
+
+  if (isLoading) {
+    return (
+      <LoadingAnimation
+        title="Loading Admin Analytics"
+        subtitle="Gathering platform-wide users, orders, revenue, and commission insights..."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">

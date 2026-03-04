@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import vexoLogo from "../assets/VexoLogo.png";
+import FalshTradeLogo from "../assets/VexoLogo.png";
 
 type LoadingAnimationProps = {
   title?: string;
@@ -42,7 +42,7 @@ const LoadingAnimation = ({
       <div className="relative mx-auto flex min-h-[inherit] w-full max-w-3xl items-center justify-center px-6 py-14">
         <section className="w-full rounded-3xl border border-slate-200 bg-white/90 p-8 text-center shadow-2xl backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/75 sm:p-10">
           <div className="mx-auto mb-6 flex w-fit items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-950/70">
-            <img src={vexoLogo} alt="Vexo" className="h-8 w-auto sm:h-9" />
+            <img src={FalshTradeLogo} alt="Flash Trade" className="h-8 w-auto sm:h-9" />
             <span className="text-sm font-semibold tracking-wide text-slate-800 dark:text-slate-100">Flash Trade</span>
           </div>
 
