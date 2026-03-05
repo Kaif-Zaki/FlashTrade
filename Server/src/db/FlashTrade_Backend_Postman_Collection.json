@@ -1,0 +1,537 @@
+{
+  "info": {
+    "_postman_id": "f3f3b38a-6f54-4b53-b913-3bd59f8adf7b",
+    "name": "FlashTrade Backend API",
+    "description": "Import this collection into Postman and run requests. Base URL defaults to http://localhost:5000/api",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "accessToken", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "sellerId", "value": "" },
+    { "key": "adminId", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "productId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "reviewId", "value": "" },
+    { "key": "commissionRuleId", "value": "" },
+    { "key": "passwordResetToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer User\",\n  \"email\": \"customer@example.com\",\n  \"password\": \"Password123!\",\n  \"address\": \"Colombo\",\n  \"role\": \"customer\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/signup"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  if (json.accessToken) pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  if (json._id && json.role === 'customer') pm.collectionVariables.set('customerId', json._id);",
+                  "  if (json._id && json.role === 'seller') pm.collectionVariables.set('sellerId', json._id);",
+                  "  if (json._id && json.role === 'admin') pm.collectionVariables.set('adminId', json._id);",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Bootstrap Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Super Admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123!\",\n  \"address\": \"HQ\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/bootstrap-admin"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/refresh-token"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"customer@example.com\"\n}" },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"password\": \"NewPassword123!\"\n}" },
+            "url": "{{baseUrl}}/auth/reset-password/{{passwordResetToken}}"
+          }
+        },
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Name\",\n  \"address\": \"Updated Address\"\n}" },
+            "url": "{{baseUrl}}/auth/update-profile"
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"Password123!\"\n}" },
+            "url": "{{baseUrl}}/auth/change-password"
+          }
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/users"
+          }
+        },
+        {
+          "name": "Create Admin (Admin)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Second Admin\",\n  \"email\": \"second-admin@example.com\",\n  \"password\": \"Password123!\",\n  \"address\": \"HQ\"\n}" },
+            "url": "{{baseUrl}}/auth/admins"
+          }
+        },
+        {
+          "name": "Promote User to Admin (Admin)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/admins/{{customerId}}/promote"
+          }
+        },
+        {
+          "name": "Pending Sellers (Admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/sellers/pending"
+          }
+        },
+        {
+          "name": "Approve Seller (Admin)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/sellers/{{sellerId}}/approve"
+          }
+        },
+        {
+          "name": "Approved Sellers (Admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/sellers/approved"
+          }
+        },
+        {
+          "name": "Get Seller By ID (Admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/sellers/{{sellerId}}"
+          }
+        },
+        {
+          "name": "Update Seller Active Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"sellerActive\": true\n}" },
+            "url": "{{baseUrl}}/auth/sellers/{{sellerId}}/status"
+          }
+        },
+        {
+          "name": "Remove Seller (Admin)",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/auth/sellers/{{sellerId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Offers",
+      "item": [
+        {
+          "name": "Get Offers",
+          "request": { "method": "GET", "url": "{{baseUrl}}/offers/" }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        { "name": "Get Categories", "request": { "method": "GET", "url": "{{baseUrl}}/categories/" } },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Electronics\",\n  \"description\": \"Devices\",\n  \"imageUrl\": \"https://example.com/cat.jpg\"\n}" },
+            "url": "{{baseUrl}}/categories/"
+          }
+        },
+        {
+          "name": "Update Category (Admin)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Electronics Updated\"\n}" },
+            "url": "{{baseUrl}}/categories/{{categoryId}}"
+          }
+        },
+        {
+          "name": "Delete Category (Admin)",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/categories/{{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        { "name": "Get Products", "request": { "method": "GET", "url": "{{baseUrl}}/products/" } },
+        { "name": "Get Products By Category", "request": { "method": "GET", "url": "{{baseUrl}}/products/category/{{categoryId}}" } },
+        { "name": "Get Product By ID", "request": { "method": "GET", "url": "{{baseUrl}}/products/{{productId}}" } },
+        {
+          "name": "Get My Products (Seller)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/products/seller/me"
+          }
+        },
+        {
+          "name": "Create Product (Seller)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sample Product\",\n  \"description\": \"Description\",\n  \"price\": 1000,\n  \"stock\": 10,\n  \"category\": \"{{categoryId}}\",\n  \"images\": [\"https://example.com/product.jpg\"],\n  \"sizes\": [\"M\"],\n  \"sizePrices\": {\"M\": 1000},\n  \"colors\": [\"black\"]\n}"
+            },
+            "url": "{{baseUrl}}/products/"
+          }
+        },
+        {
+          "name": "Update Product (Seller)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Updated Product\",\n  \"price\": 1200\n}" },
+            "url": "{{baseUrl}}/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Delete Product (Seller)",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Get Seller Products For Admin",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/products/admin/seller/{{sellerId}}"
+          }
+        },
+        {
+          "name": "Delete Product As Admin",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/products/admin/{{productId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Place Order (Customer)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"shippingAddress\": \"Colombo\",\n  \"paymentMethod\": \"cash\"\n}" },
+            "url": "{{baseUrl}}/orders/"
+          }
+        },
+        {
+          "name": "My Orders (Customer)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/orders/my"
+          }
+        },
+        {
+          "name": "My Order By ID (Customer)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/orders/my/{{orderId}}"
+          }
+        },
+        {
+          "name": "Seller Orders",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/orders/seller"
+          }
+        },
+        {
+          "name": "Seller Analytics",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/orders/seller/analytics"
+          }
+        },
+        {
+          "name": "Update Order Status (Seller)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"orderStatus\": \"shipped\"\n}" },
+            "url": "{{baseUrl}}/orders/{{orderId}}/status"
+          }
+        },
+        {
+          "name": "Update Payment Status (Seller)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"paymentStatus\": \"paid\"\n}" },
+            "url": "{{baseUrl}}/orders/{{orderId}}/payment-status"
+          }
+        },
+        {
+          "name": "All Orders (Admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/orders/admin"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get My Cart",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/cart/my"
+          }
+        },
+        {
+          "name": "Add To Cart",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"product\": \"{{productId}}\",\n  \"qty\": 1,\n  \"size\": \"M\",\n  \"color\": \"black\"\n}" },
+            "url": "{{baseUrl}}/cart/my/add"
+          }
+        },
+        {
+          "name": "Remove From Cart",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"product\": \"{{productId}}\",\n  \"size\": \"M\",\n  \"color\": \"black\"\n}" },
+            "url": "{{baseUrl}}/cart/my/remove"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"John\",\n  \"email\": \"john@example.com\",\n  \"rating\": 5,\n  \"review\": \"Excellent\",\n  \"productId\": \"{{productId}}\"\n}" },
+            "url": "{{baseUrl}}/reviews/"
+          }
+        },
+        {
+          "name": "Get Reviews",
+          "request": { "method": "GET", "url": "{{baseUrl}}/reviews/" }
+        },
+        {
+          "name": "Pending Reviews (Seller)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/reviews/seller/pending"
+          }
+        },
+        {
+          "name": "Approve Review (Seller)",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/reviews/seller/{{reviewId}}/approve"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "item": [
+        {
+          "name": "Contact Email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"John\",\n  \"email\": \"john@example.com\",\n  \"message\": \"Hello support\"\n}" },
+            "url": "{{baseUrl}}/email/contact"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Commissions",
+      "item": [
+        {
+          "name": "Estimate Commission",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": {
+              "raw": "{{baseUrl}}/commissions/estimate?categoryId={{categoryId}}&qty=1&unitPrice=1000",
+              "host": ["{{baseUrl}}"],
+              "path": ["commissions", "estimate"],
+              "query": [
+                { "key": "categoryId", "value": "{{categoryId}}" },
+                { "key": "qty", "value": "1" },
+                { "key": "unitPrice", "value": "1000" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Commission Rules (Admin)",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/commissions/"
+          }
+        },
+        {
+          "name": "Create Commission Rule (Admin)",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"category\": \"{{categoryId}}\",\n  \"ratePercent\": 10,\n  \"isActive\": true\n}" },
+            "url": "{{baseUrl}}/commissions/"
+          }
+        },
+        {
+          "name": "Update Commission Rule (Admin)",
+          "request": {
+            "method": "PUT",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"ratePercent\": 12,\n  \"isActive\": true\n}" },
+            "url": "{{baseUrl}}/commissions/{{commissionRuleId}}"
+          }
+        },
+        {
+          "name": "Delete Commission Rule (Admin)",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+            "url": "{{baseUrl}}/commissions/{{commissionRuleId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

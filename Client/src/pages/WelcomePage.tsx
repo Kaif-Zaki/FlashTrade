@@ -108,7 +108,7 @@ export default function WelcomePage() {
     <div className="min-h-screen bg-[#f5f5f3]">
       <main className="mx-auto w-full max-w-6xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.6fr_1fr]">
-          <div className="relative min-h-[320px] overflow-hidden rounded-3xl sm:min-h-[420px]">
+          <div className="relative min-h-80 overflow-hidden rounded-3xl sm:min-h-105">
             {heroProduct?.images?.[0] ? (
               <img
                 src={heroProduct.images[0]}
@@ -121,7 +121,7 @@ export default function WelcomePage() {
             <div className="absolute inset-0 bg-black/20" />
 
             <div className="relative z-10 flex h-full flex-col justify-between p-6 sm:p-8">
-              <div className="max-w-[280px] space-y-5">
+              <div className="max-w-70 space-y-5">
                 <div className="flex items-end gap-3">
                   <p className="text-5xl font-black leading-none text-white sm:text-6xl">
                     50%
@@ -150,7 +150,7 @@ export default function WelcomePage() {
             <button
               type="button"
               onClick={() => goToProduct(heroRightTopProduct?._id)}
-              className="group relative min-h-[170px] overflow-hidden rounded-3xl text-left"
+              className="group relative min-h-42.5 overflow-hidden rounded-3xl text-left"
             >
               {heroRightTopProduct?.images?.[0] ? (
                 <img
@@ -172,7 +172,7 @@ export default function WelcomePage() {
             <button
               type="button"
               onClick={() => goToProduct(heroRightBottomProduct?._id)}
-              className="group relative min-h-[170px] overflow-hidden rounded-3xl text-left"
+              className="group relative min-h-42.5 overflow-hidden rounded-3xl text-left"
             >
               {heroRightBottomProduct?.images?.[0] ? (
                 <img

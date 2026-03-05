@@ -33,6 +33,10 @@ interface ChangePasswordPayload {
   newPassword: string;
 }
 
+interface ForgotPasswordPayload {
+  email: string;
+}
+
 export const loginRequest = async (payload: LoginPayload) => {
   const response = await apiClient.post<LoginResponse>("/auth/login", payload);
   return response.data;
@@ -55,5 +59,18 @@ export const logoutRequest = async () => {
 
 export const changePasswordRequest = async (payload: ChangePasswordPayload) => {
   const response = await apiClient.put<{ message: string }>("/auth/change-password", payload);
+  return response.data;
+};
+
+export const forgotPasswordRequest = async (email: string) => {
+  const payload: ForgotPasswordPayload = { email };
+  const response = await apiClient.post<{ message: string }>("/auth/forgot-password", payload);
+  return response.data;
+};
+
+export const resetPasswordRequest = async (token: string, newPassword: string) => {
+  const response = await apiClient.post<{ message: string }>(`/auth/reset-password/${token}`, {
+    newPassword,
+  });
   return response.data;
 };

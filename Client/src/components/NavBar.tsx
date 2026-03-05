@@ -203,7 +203,7 @@ export default function Navbar() {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[70] lg:hidden">
+        <div className="fixed inset-0 z-70 lg:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-black/45"
@@ -263,7 +263,7 @@ export default function Navbar() {
         </Link>
 
         {/* SEARCH */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full lg:w-[420px]">
+        <form onSubmit={handleSearchSubmit} className="relative w-full lg:w-105">
           <input
             type="text"
             placeholder="Search"

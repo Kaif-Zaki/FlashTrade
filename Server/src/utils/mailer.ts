@@ -44,7 +44,7 @@ export const sendEmail = async (
   replyTo?: string
 ) => {
   const message = {
-    from: `"Book Club Library" <${process.env.EMAIL_USER}>`,
+    from: `"Flash Trade" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html,

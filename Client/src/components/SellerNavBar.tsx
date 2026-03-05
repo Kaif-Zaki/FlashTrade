@@ -82,7 +82,7 @@ const SellerNavBar = () => {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[70] lg:hidden">
+        <div className="fixed inset-0 z-70 lg:hidden">
           <button
             type="button"
             className="absolute inset-0 bg-black/45"

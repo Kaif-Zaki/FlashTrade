@@ -96,7 +96,7 @@ const SellerOrderManagement = () => {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-sm">
+        <div className="rounded-2xl bg-linear-to-r from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-sm">
           <h1 className="text-2xl font-bold">Order Management</h1>
           <p className="mt-1 text-sm text-slate-200">
             Track deliveries, verify COD payments, and keep order flow updated.

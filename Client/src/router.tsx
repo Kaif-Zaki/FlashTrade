@@ -28,6 +28,8 @@ import AdminCommissionManagement from './pages/AdminCommissionManagement'
 import SellerAnalyticsPage from './pages/SellerAnalytics'
 import AdminSellerProducts from './pages/AdminSellerProducts'
 import SellerApprovalRequired from './pages/SellerApprovalRequired'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +45,9 @@ export const router = createBrowserRouter([
       {path:"shipping-policy",element:<ShippingPolicy/>},
       {path:"login",element:<LoginPage/>},
       {path:"signup",element:<RegisterPage/>},
+      {path:"forgot-password",element:<ForgotPasswordPage/>},
+      {path:"reset-password",element:<ResetPasswordPage/>},
+      {path:"reset-password/:token",element:<ResetPasswordPage/>},
       {
         element:<AdminRoutes/>,
         children:[

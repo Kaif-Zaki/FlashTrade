@@ -322,10 +322,24 @@ export const forgotPassword = async (
 
     await user.save();
 
-    // Email content: send token as plain text
+    const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+    const resetLink = `${clientOrigin.replace(/\/$/, "")}/reset-password/${encodeURIComponent(resetToken)}`;
+
+    // Email content: include direct reset link + fallback token
     const htmlContent = `
       <p>Hello ${user.name || "User"},</p>
-      <p>You requested a password reset. Use the following token to reset your password:</p>
+      <p>You requested a password reset. Click the button below to set a new password:</p>
+      <p style="margin: 16px 0;">
+        <a
+          href="${resetLink}"
+          style="display: inline-block; background: #0f172a; color: #ffffff; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 600;"
+        >
+          Reset Password
+        </a>
+      </p>
+      <p>If the button doesn't work, open this link in your browser:</p>
+      <p><a href="${resetLink}">${resetLink}</a></p>
+      <p>You can also use this token manually if needed:</p>
       <p><b>${resetToken}</b></p>
       <p>This token will expire in 15 minutes.</p>
       <p>If you did not request this, please ignore this email.</p>

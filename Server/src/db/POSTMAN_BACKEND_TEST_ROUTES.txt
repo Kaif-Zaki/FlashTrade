@@ -1,0 +1,270 @@
+FlashTrade Backend Postman Test Routes
+=====================================
+
+Base URL
+- http://localhost:5000 (or your configured server port)
+
+Common Headers
+- Content-Type: application/json (for POST/PUT/PATCH with JSON body)
+- Authorization: Bearer <access_token> (only for protected routes)
+
+Token Notes
+- Get access token from: POST /auth/login
+- Refresh token route: POST /auth/refresh-token
+
+
+AUTH ROUTES (/auth)
+-------------------
+1) POST /auth/signup
+   - Auth header: NO
+   - Role: Public
+
+2) POST /auth/login
+   - Auth header: NO
+   - Role: Public
+
+3) POST /auth/bootstrap-admin
+   - Auth header: NO
+   - Role: Public (initial setup)
+
+4) POST /auth/refresh-token
+   - Auth header: NO
+   - Role: Public (uses refresh token flow)
+
+5) POST /auth/logout
+   - Auth header: NO
+   - Role: Public (based on current route definition)
+
+6) POST /auth/forgot-password
+   - Auth header: NO
+   - Role: Public
+
+7) POST /auth/reset-password/:token
+   - Auth header: NO
+   - Role: Public
+
+8) PUT /auth/change-password
+   - Auth header: YES
+   - Role: Any authenticated user
+
+9) PUT /auth/update-profile
+   - Auth header: YES
+   - Role: Any authenticated user
+
+10) GET /auth/profile
+    - Auth header: YES
+    - Role: Any authenticated user
+
+11) GET /auth/users
+    - Auth header: YES
+    - Role: ADMIN only
+
+12) POST /auth/admins
+    - Auth header: YES
+    - Role: ADMIN only
+
+13) PATCH /auth/admins/:userId/promote
+    - Auth header: YES
+    - Role: ADMIN only
+
+14) GET /auth/sellers/pending
+    - Auth header: YES
+    - Role: ADMIN only
+
+15) PATCH /auth/sellers/:userId/approve
+    - Auth header: YES
+    - Role: ADMIN only
+
+16) GET /auth/sellers/approved
+    - Auth header: YES
+    - Role: ADMIN only
+
+17) GET /auth/sellers/:userId
+    - Auth header: YES
+    - Role: ADMIN only
+
+18) PATCH /auth/sellers/:userId/status
+    - Auth header: YES
+    - Role: ADMIN only
+
+19) DELETE /auth/sellers/:userId
+    - Auth header: YES
+    - Role: ADMIN only
+
+
+OFFERS ROUTES (/offers)
+-----------------------
+1) GET /offers/
+   - Auth header: NO
+   - Role: Public
+
+
+CATEGORIES ROUTES (/categories)
+-------------------------------
+1) GET /categories/
+   - Auth header: NO
+   - Role: Public
+
+2) POST /categories/
+   - Auth header: YES
+   - Role: ADMIN only
+
+3) PUT /categories/:id
+   - Auth header: YES
+   - Role: ADMIN only
+
+4) DELETE /categories/:id
+   - Auth header: YES
+   - Role: ADMIN only
+
+
+PRODUCTS ROUTES (/products)
+---------------------------
+1) GET /products/
+   - Auth header: NO
+   - Role: Public
+
+2) GET /products/category/:categoryId
+   - Auth header: NO
+   - Role: Public
+
+3) GET /products/:id
+   - Auth header: NO
+   - Role: Public
+
+4) GET /products/seller/me
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+5) POST /products/
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+6) PUT /products/:id
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+7) DELETE /products/:id
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+8) GET /products/admin/seller/:sellerId
+   - Auth header: YES
+   - Role: ADMIN only
+
+9) DELETE /products/admin/:id
+   - Auth header: YES
+   - Role: ADMIN only
+
+
+ORDERS ROUTES (/orders)
+-----------------------
+(All routes under /orders require Authorization header)
+
+1) POST /orders/
+   - Auth header: YES
+   - Role: CUSTOMER only
+
+2) GET /orders/my
+   - Auth header: YES
+   - Role: CUSTOMER only
+
+3) GET /orders/my/:orderId
+   - Auth header: YES
+   - Role: CUSTOMER only
+
+4) GET /orders/seller
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+5) GET /orders/seller/analytics
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+6) PATCH /orders/:orderId/status
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+7) PATCH /orders/:orderId/payment-status
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+8) GET /orders/admin
+   - Auth header: YES
+   - Role: ADMIN only
+
+
+CART ROUTES (/cart)
+-------------------
+(All routes under /cart require Authorization header)
+
+1) GET /cart/my
+   - Auth header: YES
+   - Role: CUSTOMER only
+
+2) POST /cart/my/add
+   - Auth header: YES
+   - Role: CUSTOMER only
+
+3) POST /cart/my/remove
+   - Auth header: YES
+   - Role: CUSTOMER only
+
+
+REVIEWS ROUTES (/reviews)
+-------------------------
+1) POST /reviews/
+   - Auth header: NO
+   - Role: Public
+
+2) GET /reviews/
+   - Auth header: NO
+   - Role: Public
+
+3) GET /reviews/seller/pending
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+4) PATCH /reviews/seller/:reviewId/approve
+   - Auth header: YES
+   - Role: SELLER only + seller must be approved/active
+
+
+EMAIL ROUTES (/email)
+---------------------
+1) POST /email/contact
+   - Auth header: NO
+   - Role: Public
+
+
+COMMISSION ROUTES (/commissions)
+--------------------------------
+1) GET /commissions/estimate
+   - Auth header: YES
+   - Role: Any authenticated user
+
+2) GET /commissions/
+   - Auth header: YES
+   - Role: ADMIN only
+
+3) POST /commissions/
+   - Auth header: YES
+   - Role: ADMIN only
+
+4) PUT /commissions/:id
+   - Auth header: YES
+   - Role: ADMIN only
+
+5) DELETE /commissions/:id
+   - Auth header: YES
+   - Role: ADMIN only
+
+
+Quick Postman Setup
+-------------------
+1) Create environment variable: baseUrl = http://localhost:5000
+2) Login first and save token from /auth/login as: accessToken
+3) For protected routes set header:
+   Authorization: Bearer {{accessToken}}
+4) For JSON requests set header:
+   Content-Type: application/json
